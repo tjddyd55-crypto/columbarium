@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { supabase } from '../../lib/supabase';
+import { api } from '../../lib/api';
 
 export default function ContractPage() {
   const { seatId } = useParams<{ seatId: string }>();
@@ -12,20 +12,24 @@ export default function ContractPage() {
   const handleContract = async () => {
     if (!seatId) return;
     setSubmitting(true);
-    const { error } = await supabase.from('contracts').insert([
-      {
+    try {
+      const { hasActive } = await api.contracts.hasActive(seatId);
+      if (hasActive) {
+        alert('이미 활성 계약이 있는 봉안함입니다. 다른 봉안함을 선택해 주세요.');
+        setSubmitting(false);
+        return;
+      }
+      await api.contracts.create({
         seat_id: seatId,
         user_name: userName || '홍길동',
         price,
-        status: 'PENDING',
-      },
-    ]);
-    setSubmitting(false);
-    if (!error) {
+      });
       alert('계약 요청 완료');
       navigate('/facilities');
-    } else {
-      alert('계약 요청 실패: ' + error.message);
+    } catch (e) {
+      alert('계약 요청 실패: ' + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setSubmitting(false);
     }
   };
 

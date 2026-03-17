@@ -1,16 +1,7 @@
 import { useEffect, useState } from 'react';
 import DataTable from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
-import { supabase } from '../../lib/supabase';
-
-type WaitlistRow = {
-  id: string;
-  seat_id: string;
-  user_name: string | null;
-  user_phone: string | null;
-  status: string;
-  created_at: string;
-};
+import { api, type WaitlistRow } from '../../lib/api';
 
 const statusLabel: Record<string, string> = {
   WAITING: '대기',
@@ -23,9 +14,12 @@ export default function QueueManagement() {
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
-    const { data } = await supabase.from('waitlist').select('*').order('created_at', { ascending: false });
-    setRows((data as WaitlistRow[]) ?? []);
-    setLoading(false);
+    try {
+      const data = await api.waitlist.list();
+      setRows(data);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -33,7 +27,7 @@ export default function QueueManagement() {
   }, []);
 
   const approveWaitlist = async (id: string) => {
-    await supabase.from('waitlist').update({ status: 'ACTIVE' }).eq('id', id);
+    await api.waitlist.activate(id);
     await load();
   };
 

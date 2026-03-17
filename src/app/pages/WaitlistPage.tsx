@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { supabase } from '../../lib/supabase';
+import { api } from '../../lib/api';
 
 export default function WaitlistPage() {
   const { seatId } = useParams<{ seatId: string }>();
@@ -12,20 +12,18 @@ export default function WaitlistPage() {
   const handleSubmit = async () => {
     if (!seatId) return;
     setSubmitting(true);
-    const { error } = await supabase.from('waitlist').insert([
-      {
+    try {
+      await api.waitlist.create({
         seat_id: seatId,
         user_name: userName || '홍길동',
         user_phone: userPhone || '010-0000-0000',
-        status: 'WAITING',
-      },
-    ]);
-    setSubmitting(false);
-    if (!error) {
+      });
       alert('대기열 신청 완료');
       navigate('/facilities');
-    } else {
-      alert('신청 실패: ' + error.message);
+    } catch (e) {
+      alert('신청 실패: ' + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setSubmitting(false);
     }
   };
 

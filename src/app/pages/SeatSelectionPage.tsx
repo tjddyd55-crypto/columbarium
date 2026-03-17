@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { supabase } from '../../lib/supabase';
+import { api } from '../../lib/api';
 
 type SeatStatus = 'AVAILABLE' | 'WAITING' | 'ACTIVE';
 
@@ -14,33 +14,6 @@ type SeatRow = {
 const SEAT_IDS = ['S1', 'S2', 'S3'];
 const SEAT_CODES: Record<string, string> = { S1: 'A-1-001', S2: 'A-1-002', S3: 'A-1-003' };
 
-async function fetchWaitingCount(seatId: string): Promise<number> {
-  const { count } = await supabase
-    .from('waitlist')
-    .select('*', { count: 'exact', head: true })
-    .eq('seat_id', seatId)
-    .eq('status', 'WAITING');
-  return count ?? 0;
-}
-
-async function fetchSeatStatus(seatId: string): Promise<SeatStatus> {
-  const { data: activeContract } = await supabase
-    .from('contracts')
-    .select('id')
-    .eq('seat_id', seatId)
-    .eq('status', 'ACTIVE')
-    .limit(1)
-    .maybeSingle();
-  if (activeContract) return 'ACTIVE';
-  const { count } = await supabase
-    .from('waitlist')
-    .select('*', { count: 'exact', head: true })
-    .eq('seat_id', seatId)
-    .eq('status', 'WAITING');
-  if ((count ?? 0) > 0) return 'WAITING';
-  return 'AVAILABLE';
-}
-
 export default function SeatSelectionPage() {
   const { id: facilityId } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -52,10 +25,7 @@ export default function SeatSelectionPage() {
     (async () => {
       const rows: SeatRow[] = await Promise.all(
         SEAT_IDS.map(async (id) => {
-          const [status, waitingCount] = await Promise.all([
-            fetchSeatStatus(id),
-            fetchWaitingCount(id),
-          ]);
+          const { status, waitingCount } = await api.seats.status(id);
           return { id, code: SEAT_CODES[id] ?? id, status, waitingCount };
         })
       );

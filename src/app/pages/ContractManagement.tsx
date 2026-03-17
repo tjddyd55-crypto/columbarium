@@ -1,16 +1,7 @@
 import { useEffect, useState } from 'react';
 import DataTable from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
-import { supabase } from '../../lib/supabase';
-
-type ContractRow = {
-  id: string;
-  seat_id: string;
-  user_name: string | null;
-  price: number | null;
-  status: string;
-  created_at: string;
-};
+import { api, type ContractRow } from '../../lib/api';
 
 const statusLabel: Record<string, string> = {
   PENDING: '대기',
@@ -23,9 +14,12 @@ export default function ContractManagement() {
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
-    const { data } = await supabase.from('contracts').select('*').order('created_at', { ascending: false });
-    setRows((data as ContractRow[]) ?? []);
-    setLoading(false);
+    try {
+      const data = await api.contracts.list();
+      setRows(data);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -33,7 +27,7 @@ export default function ContractManagement() {
   }, []);
 
   const approveContract = async (id: string) => {
-    await supabase.from('contracts').update({ status: 'ACTIVE' }).eq('id', id);
+    await api.contracts.activate(id);
     await load();
   };
 
