@@ -5,6 +5,7 @@ export default function Header() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
+    localStorage.removeItem('admin_token');
     navigate('/admin/login');
   };
 

@@ -9,6 +9,7 @@ export default function Login() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    localStorage.setItem('admin_token', 'ok');
     navigate('/admin');
   };
 

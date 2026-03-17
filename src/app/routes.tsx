@@ -18,6 +18,7 @@ import ResaleManagement from "./pages/ResaleManagement";
 import MemberManagement from "./pages/MemberManagement";
 import NotificationManagement from "./pages/NotificationManagement";
 import AuditLog from "./pages/AuditLog";
+import NotFoundPage from "./pages/NotFoundPage";
 
 export const router = createBrowserRouter([
   {
@@ -51,5 +52,9 @@ export const router = createBrowserRouter([
   {
     path: "/admin/login",
     Component: Login,
+  },
+  {
+    path: "*",
+    Component: NotFoundPage,
   },
 ]);

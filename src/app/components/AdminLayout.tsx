@@ -1,8 +1,18 @@
-import { Outlet } from 'react-router';
+import { useEffect } from 'react';
+import { Outlet, useNavigate } from 'react-router';
 import Sidebar from './Sidebar';
 import Header from './Header';
 
 export default function AdminLayout() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem('admin_token');
+    if (!isLoggedIn) {
+      navigate('/admin/login');
+    }
+  }, [navigate]);
+
   return (
     <div className="flex h-screen bg-[var(--color-bg)]">
       <Sidebar />
