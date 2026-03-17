@@ -3,7 +3,8 @@ import { query, runInTransaction } from '../db/index.js';
 
 export const waitlistRouter = Router();
 
-/** Prevents position race: use transaction + lock row per seat_id so concurrent requests serialize. */
+/** Prevents position race: use transaction + lock row per seat_id so concurrent requests serialize.
+ *  Position: we do NOT reorder on cancel (gaps allowed); "앞에 몇 명" is computed separately when needed. */
 waitlistRouter.post('/', async (req, res, next) => {
   try {
     const { seat_id, user_name, user_phone } = req.body || {};
@@ -19,6 +20,7 @@ waitlistRouter.post('/', async (req, res, next) => {
         'SELECT seat_id FROM waitlist_seat_lock WHERE seat_id = $1 FOR UPDATE',
         [seat_id]
       );
+      // Future: use waitlist_seat_lock.current_count (increment in tx) instead of COUNT(*) when data grows.
       const countResult = await client.query(
         'SELECT COUNT(*)::int AS c FROM waitlist WHERE seat_id = $1 AND status = $2',
         [seat_id, 'WAITING']

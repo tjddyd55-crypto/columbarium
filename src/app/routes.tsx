@@ -2,6 +2,8 @@ import { createBrowserRouter } from "react-router";
 import UserLayout from "./components/UserLayout";
 import AdminLayout from "./components/AdminLayout";
 import Login from "./pages/Login";
+import UserLoginPage from "./pages/UserLoginPage";
+import SignupPage from "./pages/SignupPage";
 import HomePage from "./pages/HomePage";
 import FacilityListPage from "./pages/FacilityListPage";
 import FacilityDetailPage from "./pages/FacilityDetailPage";
@@ -31,6 +33,8 @@ export const router = createBrowserRouter([
       { path: "seats/:id", Component: SeatSelectionPage },
       { path: "waitlist/:seatId", Component: WaitlistPage },
       { path: "contract/:seatId", Component: ContractPage },
+      { path: "login", Component: UserLoginPage },
+      { path: "signup", Component: SignupPage },
     ],
   },
   {

@@ -26,12 +26,23 @@ export default function ContractPage() {
       });
       alert('계약 요청 완료');
       navigate('/facilities');
-    } catch (e) {
-      alert('계약 요청 실패: ' + (e instanceof Error ? e.message : String(e)));
+    } catch {
+      alert('오류 발생');
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (!seatId) {
+    return (
+      <div className="space-y-6">
+        <button type="button" onClick={() => navigate('/facilities')} className="text-sm text-gray-600 hover:text-[var(--color-primary)]">
+          ← 시설 목록
+        </button>
+        <p className="text-gray-500">봉안함 정보가 없습니다.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

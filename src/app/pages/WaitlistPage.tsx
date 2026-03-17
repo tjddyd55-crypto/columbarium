@@ -15,17 +15,28 @@ export default function WaitlistPage() {
     try {
       await api.waitlist.create({
         seat_id: seatId,
-        user_name: userName || '홍길동',
-        user_phone: userPhone || '010-0000-0000',
+        user_name: userName.trim() || undefined,
+        user_phone: userPhone.trim() || undefined,
       });
-      alert('대기열 신청 완료');
+      alert('대기열 등록 완료');
       navigate('/facilities');
-    } catch (e) {
-      alert('신청 실패: ' + (e instanceof Error ? e.message : String(e)));
+    } catch {
+      alert('오류 발생');
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (!seatId) {
+    return (
+      <div className="space-y-6">
+        <button type="button" onClick={() => navigate('/facilities')} className="text-sm text-gray-600 hover:text-[var(--color-primary)]">
+          ← 시설 목록
+        </button>
+        <p className="text-gray-500">봉안함 정보가 없습니다.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

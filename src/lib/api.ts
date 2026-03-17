@@ -1,10 +1,39 @@
-const API = (import.meta.env.VITE_API_URL as string) || '';
+const API_BASE = (import.meta.env.VITE_API_URL as string) || '';
+const TOKEN_KEY = 'token';
+const USER_KEY = 'user';
 
+export function getStoredToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function getStoredUser(): AuthUser | null {
+  try {
+    const raw = localStorage.getItem(USER_KEY);
+    return raw ? (JSON.parse(raw) as AuthUser) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setAuthStorage(token: string, user: AuthUser): void {
+  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
+
+export function clearAuthStorage(): void {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+}
+
+export type AuthUser = { id: string; login_id: string; name: string; role: string };
+export type AuthResponse = { token: string; user: AuthUser };
+
+// All paths are relative /api/... (proxied to backend in dev)
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    ...options,
-  });
+  const headers: HeadersInit = { 'Content-Type': 'application/json', ...options?.headers };
+  const token = getStoredToken();
+  if (token) (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error((err as { error?: string }).error || res.statusText);
@@ -13,6 +42,19 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  auth: {
+    signup: (body: {
+      login_id: string;
+      password: string;
+      name: string;
+      birth_date?: string;
+      phone: string;
+      email?: string;
+      address?: string;
+    }) => request<AuthResponse>('/api/auth/signup', { method: 'POST', body: JSON.stringify(body) }),
+    login: (body: { login_id: string; password: string }) =>
+      request<AuthResponse>('/api/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+  },
   waitlist: {
     create: (body: { seat_id: string; user_name?: string; user_phone?: string }) =>
       request<{ id: string }>('/api/waitlist', { method: 'POST', body: JSON.stringify(body) }),
@@ -21,7 +63,7 @@ export const api = {
     activate: (id: string) => request<{ ok: boolean }>(`/api/waitlist/${id}/activate`, { method: 'PATCH' }),
   },
   contracts: {
-    create: (body: { seat_id: string; user_name?: string; price?: number }) =>
+    create: (body: { seat_id: string; waitlist_id?: string; user_name?: string; price?: number }) =>
       request<{ id: string }>('/api/contracts', { method: 'POST', body: JSON.stringify(body) }),
     list: () => request<ContractRow[]>('/api/contracts'),
     hasActive: (seatId: string) => request<{ hasActive: boolean }>(`/api/contracts/${seatId}`),

@@ -3,10 +3,10 @@ import { query } from '../db/index.js';
 
 export const contractsRouter = Router();
 
-// When auth is added: allow contract creation only if the requesting user is the ACTIVE waitlist for this seat.
+// When auth is added: allow contract creation only if the requesting user is the ACTIVE waitlist for this seat (check contract.waitlist_id = current ACTIVE waitlist.id).
 contractsRouter.post('/', async (req, res, next) => {
   try {
-    const { seat_id, user_name, price } = req.body || {};
+    const { seat_id, waitlist_id, user_name, price } = req.body || {};
     if (!seat_id) {
       return res.status(400).json({ error: 'seat_id required' });
     }
@@ -18,10 +18,10 @@ contractsRouter.post('/', async (req, res, next) => {
       return res.status(409).json({ error: 'ACTIVE contract already exists for this seat' });
     }
     const insert = await query(
-      `INSERT INTO contracts (seat_id, user_name, price, status)
-       VALUES ($1, $2, $3, 'PENDING')
+      `INSERT INTO contracts (seat_id, waitlist_id, user_name, price, status)
+       VALUES ($1, $2, $3, $4, 'PENDING')
        RETURNING id`,
-      [seat_id, user_name ?? null, price ?? null]
+      [seat_id, waitlist_id ?? null, user_name ?? null, price ?? null]
     );
     res.status(201).json(insert.rows[0]);
   } catch (e) {

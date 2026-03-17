@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import { authRouter } from './routes/auth.js';
 import { waitlistRouter } from './routes/waitlist.js';
 import { contractsRouter } from './routes/contracts.js';
 import { seatsRouter } from './routes/seats.js';
@@ -15,6 +16,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use('/api/auth', authRouter);
 app.use('/api/waitlist', waitlistRouter);
 app.use('/api/contracts', contractsRouter);
 app.use('/api/seats', seatsRouter);
