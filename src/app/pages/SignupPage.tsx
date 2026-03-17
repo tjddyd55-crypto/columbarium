@@ -54,7 +54,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto space-y-6">
+    <div className="w-full px-4 space-y-6">
       <h1 className="text-2xl font-bold text-[var(--color-primary)]">회원가입</h1>
       <form onSubmit={handleSubmit} className="bg-white border border-[var(--color-border)] rounded-lg p-6 space-y-4">
         {error && <p className="text-sm text-red-600">{error}</p>}

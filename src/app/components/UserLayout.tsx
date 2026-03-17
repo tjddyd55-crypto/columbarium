@@ -11,9 +11,9 @@ export default function UserLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] flex flex-col">
-      <header className="sticky top-0 z-10 bg-white border-b border-[var(--color-border)] px-4 py-3 shrink-0">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+    <div className="w-full min-h-screen bg-[var(--color-bg)] flex flex-col">
+      <header className="sticky top-0 z-10 bg-white border-b border-[var(--color-border)] w-full px-4 py-3 shrink-0">
+        <div className="w-full flex items-center justify-between">
           <Link to="/" className="text-lg font-bold text-[var(--color-primary)]">
             낙골당
           </Link>
@@ -40,7 +40,7 @@ export default function UserLayout() {
           </nav>
         </div>
       </header>
-      <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-6">
+      <main className="flex-1 w-full px-4 py-6">
         <Outlet />
       </main>
     </div>

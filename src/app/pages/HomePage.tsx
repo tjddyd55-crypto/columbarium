@@ -9,7 +9,7 @@ export default function HomePage() {
         <h1 className="text-3xl font-bold text-[var(--color-primary)]">
           낙골당 서비스
         </h1>
-        <p className="text-gray-600 max-w-lg mx-auto">
+        <p className="text-gray-600 w-full">
           안심하고 봉안할 수 있는 시설을 찾아보세요.
         </p>
       </section>
@@ -18,7 +18,7 @@ export default function HomePage() {
         <button
           type="button"
           onClick={() => navigate('/facilities')}
-          className="w-full max-w-sm bg-[var(--color-primary)] text-white py-4 px-6 rounded-xl font-medium hover:bg-[var(--color-primary-dark)] transition-colors"
+          className="w-full bg-[var(--color-primary)] text-white py-4 px-6 rounded-xl font-medium hover:bg-[var(--color-primary-dark)] transition-colors"
         >
           시설 목록 보기
         </button>
