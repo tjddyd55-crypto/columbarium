@@ -1,4 +1,4 @@
-# 🚀 Cursor AI 완전 가이드 - 낙골당 관리자 대시보드
+# 🚀 Cursor AI 완전 가이드 - 납골당 관리자 대시보드
 
 ## 📋 빠른 시작 (3단계)
 
@@ -21,7 +21,7 @@ npm install react-router lucide-react recharts
 
 **세 번째:** 다음 프롬프트 입력
 ```
-위 가이드대로 낙골당 관리자 대시보드를 완전히 구현해줘.
+위 가이드대로 납골당 관리자 대시보드를 완전히 구현해줘.
 모든 파일(11개 페이지 + 6개 컴포넌트 + 스타일)을 정확히 생성해줘.
 ```
 
@@ -196,7 +196,7 @@ npm install recharts
 {
   position: 1,                  // 순번
   user: "김철수",               // 사용자
-  facility: "강남 낙골당",      // 시설
+  facility: "강남 납골당",      // 시설
   unit: "A-101",                // 봉안함
   waitingCount: 12,             // 총 대기 인원
   estimatedMonths: 3,           // 예상 대기 기간 (개월)
@@ -210,7 +210,7 @@ npm install recharts
 {
   contractNo: "C-2026-001",     // 계약번호
   buyer: "김철수",              // 계약자
-  facility: "강남 낙골당",      // 시설
+  facility: "강남 납골당",      // 시설
   unit: "A-101",                // 봉안함
   contractYears: 30,            // 계약 기간 (년)
   amount: "5,000,000원",        // 계약 금액
@@ -225,7 +225,7 @@ npm install recharts
 {
   seller: "김철수",                      // 판매자
   buyer: null,                           // 구매자 (승인 전까지 null)
-  facility: "강남 낙골당",               // 시설
+  facility: "강남 납골당",               // 시설
   unit: "A-101",                         // 봉안함
   originalPrice: "5,000,000원",          // 원가
   resalePrice: "4,800,000원",            // 재판매가
@@ -266,7 +266,7 @@ npm install recharts
 ### 전체 생성
 ```
 CURSOR_AI_GUIDE.md와 CURSOR_AI_REMAINING_PAGES.md의 모든 코드를 
-정확히 그대로 사용해서 낙골당 관리자 대시보드를 완전히 구현해줘.
+정확히 그대로 사용해서 납골당 관리자 대시보드를 완전히 구현해줘.
 ```
 
 ### 개별 페이지 생성
@@ -341,7 +341,7 @@ Cursor AI에 자연어로 요청:
 
 ## ✨ 완성!
 
-이 가이드대로 진행하면 **완전히 작동하는 낙골당 관리자 대시보드**가 생성됩니다!
+이 가이드대로 진행하면 **완전히 작동하는 납골당 관리자 대시보드**가 생성됩니다!
 
 **총 19개 파일 / 11개 페이지 / 6개 컴포넌트**
 

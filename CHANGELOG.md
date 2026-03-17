@@ -1,4 +1,4 @@
-# 낙골당 분양 플랫폼 관리자 대시보드 - 변경사항
+# 납골당 분양 플랫폼 관리자 대시보드 - 변경사항
 
 ## 📋 주요 업데이트 내역
 
@@ -34,7 +34,7 @@
 {
   position: 1,
   user: "김철수",
-  facility: "강남 낙골당",
+  facility: "강남 납골당",
   unit: "A-101",
   waitingCount: 12,        // 총 대기 인원
   estimatedMonths: 3,      // 예상 대기 기간 (개월)
@@ -67,7 +67,7 @@
 {
   contractNo: "C-2026-001",
   buyer: "김철수",          // user → buyer
-  facility: "강남 낙골당",
+  facility: "강남 납골당",
   unit: "A-101",
   contractYears: 30,       // 계약 기간 (년)
   amount: "5,000,000원",
@@ -102,7 +102,7 @@
 {
   seller: "김철수",
   buyer: null,  // 승인 전까지 null
-  facility: "강남 낙골당",
+  facility: "강남 납골당",
   unit: "A-101",
   originalPrice: "5,000,000원",
   resalePrice: "4,800,000원",

@@ -45,7 +45,7 @@ export function LoginPage() {
       <div className="flex-1 flex flex-col justify-center py-12">
         {/* Logo */}
         <div className="text-center mb-12">
-          <h1 className="text-3xl mb-2 text-[#1E3A8A]">낙골당</h1>
+          <h1 className="text-3xl mb-2 text-[#1E3A8A]">납골당</h1>
           <p className="text-gray-600">Korea Memorial Platform</p>
         </div>
 

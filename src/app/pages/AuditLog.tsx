@@ -5,7 +5,7 @@ import { Search, Filter, Download } from 'lucide-react';
 
 const logs = [
   { id: 1, user: '관리자', action: '로그인', target: '시스템', ip: '192.168.1.100', timestamp: '2024-03-17 15:30:25', status: 'SUCCESS' },
-  { id: 2, user: '관리자', action: '사업자 등록', target: '강남 낙골당', ip: '192.168.1.100', timestamp: '2024-03-17 15:32:10', status: 'SUCCESS' },
+  { id: 2, user: '관리자', action: '사업자 등록', target: '강남 납골당', ip: '192.168.1.100', timestamp: '2024-03-17 15:32:10', status: 'SUCCESS' },
   { id: 3, user: '관리자', action: '계약 수정', target: '계약 #123', ip: '192.168.1.100', timestamp: '2024-03-17 15:35:45', status: 'SUCCESS' },
   { id: 4, user: '관리자', action: '봉안함 삭제', target: '봉안함 A-12', ip: '192.168.1.100', timestamp: '2024-03-17 15:38:20', status: 'FAILED' },
 ];

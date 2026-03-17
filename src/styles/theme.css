@@ -1,7 +1,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* 낙골당 관리자 대시보드 (가이드) */
+  /* 납골당 관리자 대시보드 (가이드) */
   --color-primary: #3B82F6;
   --color-primary-dark: #2563EB;
   --color-secondary: #1E293B;

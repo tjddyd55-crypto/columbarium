@@ -15,7 +15,7 @@ export default function UserLayout() {
       <header className="sticky top-0 z-10 bg-white border-b border-[var(--color-border)] w-full px-4 py-3 shrink-0">
         <div className="w-full flex items-center justify-between">
           <Link to="/" className="text-lg font-bold text-[var(--color-primary)]">
-            낙골당
+            납골당
           </Link>
           <nav className="text-sm text-gray-600 flex items-center gap-4">
             <Link to="/facilities" className="hover:text-[var(--color-primary)]">

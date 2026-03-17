@@ -1,4 +1,4 @@
-# 낙골당 관리자 대시보드 - 나머지 페이지 (Part 2)
+# 납골당 관리자 대시보드 - 나머지 페이지 (Part 2)
 
 ## 이 파일의 페이지들을 추가로 생성해주세요
 
@@ -13,9 +13,9 @@ import StatusBadge from '../components/StatusBadge';
 import { Plus, Search, Eye, Edit, Ban } from 'lucide-react';
 
 const operators = [
-  { id: 1, name: '강남 낙골당', owner: '김철수', email: 'gangnam@nakgoldang.com', phone: '010-1234-5678', facilities: 3, status: 'ACTIVE', createdAt: '2024-01-15' },
-  { id: 2, name: '서초 낙골당', owner: '이영희', email: 'seocho@nakgoldang.com', phone: '010-2345-6789', facilities: 2, status: 'ACTIVE', createdAt: '2024-02-20' },
-  { id: 3, name: '역삼 낙골당', owner: '박민수', email: 'yeoksam@nakgoldang.com', phone: '010-3456-7890', facilities: 1, status: 'PENDING', createdAt: '2024-03-10' },
+  { id: 1, name: '강남 납골당', owner: '김철수', email: 'gangnam@nakgoldang.com', phone: '010-1234-5678', facilities: 3, status: 'ACTIVE', createdAt: '2024-01-15' },
+  { id: 2, name: '서초 납골당', owner: '이영희', email: 'seocho@nakgoldang.com', phone: '010-2345-6789', facilities: 2, status: 'ACTIVE', createdAt: '2024-02-20' },
+  { id: 3, name: '역삼 납골당', owner: '박민수', email: 'yeoksam@nakgoldang.com', phone: '010-3456-7890', facilities: 1, status: 'PENDING', createdAt: '2024-03-10' },
 ];
 
 export default function OperatorManagement() {
@@ -117,9 +117,9 @@ import StatusBadge from '../components/StatusBadge';
 import { Plus, Search, MapPin, Eye, Edit } from 'lucide-react';
 
 const facilities = [
-  { id: 1, name: '강남점 1호점', operator: '강남 낙골당', address: '서울 강남구 테헤란로 123', units: 50, status: 'ACTIVE', occupancy: '85%' },
-  { id: 2, name: '강남점 2호점', operator: '강남 낙골당', address: '서울 강남구 역삼로 456', units: 40, status: 'ACTIVE', occupancy: '92%' },
-  { id: 3, name: '서초 본점', operator: '서초 낙골당', address: '서울 서초구 서초대로 789', units: 60, status: 'MAINTENANCE', occupancy: '0%' },
+  { id: 1, name: '강남점 1호점', operator: '강남 납골당', address: '서울 강남구 테헤란로 123', units: 50, status: 'ACTIVE', occupancy: '85%' },
+  { id: 2, name: '강남점 2호점', operator: '강남 납골당', address: '서울 강남구 역삼로 456', units: 40, status: 'ACTIVE', occupancy: '92%' },
+  { id: 3, name: '서초 본점', operator: '서초 납골당', address: '서울 서초구 서초대로 789', units: 60, status: 'MAINTENANCE', occupancy: '0%' },
 ];
 
 export default function FacilityManagement() {
@@ -425,7 +425,7 @@ import { Search, Filter, Download } from 'lucide-react';
 
 const logs = [
   { id: 1, user: '관리자', action: '로그인', target: '시스템', ip: '192.168.1.100', timestamp: '2024-03-17 15:30:25', status: 'SUCCESS' },
-  { id: 2, user: '관리자', action: '사업자 등록', target: '강남 낙골당', ip: '192.168.1.100', timestamp: '2024-03-17 15:32:10', status: 'SUCCESS' },
+  { id: 2, user: '관리자', action: '사업자 등록', target: '강남 납골당', ip: '192.168.1.100', timestamp: '2024-03-17 15:32:10', status: 'SUCCESS' },
   { id: 3, user: '관리자', action: '계약 수정', target: '계약 #123', ip: '192.168.1.100', timestamp: '2024-03-17 15:35:45', status: 'SUCCESS' },
   { id: 4, user: '관리자', action: '봉안함 삭제', target: '봉안함 A-12', ip: '192.168.1.100', timestamp: '2024-03-17 15:38:20', status: 'FAILED' },
 ];

@@ -188,7 +188,7 @@ export function MyPage() {
 
       {/* Footer */}
       <div className="px-6 py-4 text-center text-sm text-gray-500">
-        <p>낙골당 플랫폼 v1.0.0</p>
+        <p>납골당 플랫폼 v1.0.0</p>
         <p className="mt-1">© 2026 Korea Memorial Platform</p>
       </div>
     </div>
