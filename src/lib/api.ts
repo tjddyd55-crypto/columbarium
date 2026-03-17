@@ -51,7 +51,15 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     throw new Error(message);
   }
 
+  // Front server fallback (HTML/empty body) should never be treated as valid API data.
+  if (body == null) {
+    throw new Error('API 응답을 읽을 수 없습니다. VITE_API_URL 또는 프록시 설정을 확인하세요.');
+  }
+
   if (isEnvelope && envelope.success === true) {
+    if (envelope.data == null) {
+      throw new Error('API 데이터가 비어 있습니다.');
+    }
     return envelope.data as T;
   }
   return body as T;

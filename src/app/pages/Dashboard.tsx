@@ -10,6 +10,7 @@ export default function Dashboard() {
   const [contractCount, setContractCount] = useState<number>(0);
   const [pieData, setPieData] = useState<{ name: string; value: number; color: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -29,6 +30,9 @@ export default function Dashboard() {
           { name: '기타', value: contracts.length - (byStatus.ACTIVE ?? 0) - (byStatus.PENDING ?? 0), color: '#94a3b8' },
         ].filter((d) => d.value > 0));
       })
+      .catch((e) => {
+        if (!cancelled) setError(e instanceof Error ? e.message : '대시보드 로딩 중 오류가 발생했습니다.');
+      })
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
@@ -36,6 +40,7 @@ export default function Dashboard() {
   }, []);
 
   if (loading) return <p className="text-gray-500">로딩 중...</p>;
+  if (error) return <p className="text-red-600">{error}</p>;
 
   return (
     <div className="space-y-8">
