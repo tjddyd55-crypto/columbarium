@@ -73,6 +73,23 @@ export const api = {
     status: (seatId: string) =>
       request<{ status: 'ACTIVE' | 'WAITING' | 'AVAILABLE'; waitingCount: number }>(`/api/seats/${seatId}/status`),
   },
+  facilities: {
+    list: () => request<FacilityRow[]>('/api/facilities'),
+    get: (id: string) => request<FacilityRow>(`/api/facilities/${id}`),
+    getSeats: (id: string) => request<{ seat_id: string; code: string | null }[]>(`/api/facilities/${id}/seats`),
+  },
+  my: {
+    waitlist: () => request<WaitlistRow[]>('/api/my/waitlist'),
+    contracts: () => request<ContractRow[]>('/api/my/contracts'),
+  },
+};
+
+export type FacilityRow = {
+  id: string;
+  name: string;
+  address: string | null;
+  price_from: number | null;
+  image_url: string | null;
 };
 
 export type WaitlistRow = {

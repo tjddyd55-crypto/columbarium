@@ -1,6 +1,9 @@
 import express from 'express';
 import cors from 'cors';
+import { optionalAuth } from './middleware/auth.js';
 import { authRouter } from './routes/auth.js';
+import { facilitiesRouter } from './routes/facilities.js';
+import { myRouter } from './routes/my.js';
 import { waitlistRouter } from './routes/waitlist.js';
 import { contractsRouter } from './routes/contracts.js';
 import { seatsRouter } from './routes/seats.js';
@@ -17,8 +20,10 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/auth', authRouter);
-app.use('/api/waitlist', waitlistRouter);
-app.use('/api/contracts', contractsRouter);
+app.use('/api/facilities', facilitiesRouter);
+app.use('/api/my', myRouter);
+app.use('/api/waitlist', optionalAuth, waitlistRouter);
+app.use('/api/contracts', optionalAuth, contractsRouter);
 app.use('/api/seats', seatsRouter);
 
 app.get('/api/health', (req, res) => {

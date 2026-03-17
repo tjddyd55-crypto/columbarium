@@ -11,15 +11,6 @@ type SeatRow = {
   waitingCount: number;
 };
 
-const SEAT_IDS_BY_FACILITY: Record<string, string[]> = {
-  '1': ['S1', 'S2', 'S3'],
-  '2': ['S4', 'S5', 'S6'],
-};
-const SEAT_CODE_MAP: Record<string, string> = {
-  S1: 'A-1-001', S2: 'A-1-002', S3: 'A-1-003',
-  S4: 'B-1-001', S5: 'B-1-002', S6: 'B-1-003',
-};
-
 export default function SeatSelectionPage() {
   const { id: facilityId } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -28,9 +19,7 @@ export default function SeatSelectionPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const seatIds = (facilityId && SEAT_IDS_BY_FACILITY[facilityId]) || SEAT_IDS_BY_FACILITY['1'] || [];
-    if (!seatIds.length) {
-      setSeats([]);
+    if (!facilityId) {
       setLoading(false);
       return;
     }
@@ -39,12 +28,13 @@ export default function SeatSelectionPage() {
     let cancelled = false;
     (async () => {
       try {
+        const seatList = await api.facilities.getSeats(facilityId);
         const rows: SeatRow[] = await Promise.all(
-          seatIds.map(async (sid) => {
-            const { status, waitingCount } = await api.seats.status(sid);
+          seatList.map(async (s) => {
+            const { status, waitingCount } = await api.seats.status(s.seat_id);
             return {
-              id: sid,
-              code: SEAT_CODE_MAP[sid] ?? sid,
+              id: s.seat_id,
+              code: s.code ?? s.seat_id,
               status,
               waitingCount,
             };

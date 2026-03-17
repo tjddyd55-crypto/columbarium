@@ -21,6 +21,9 @@ export default function UserLayout() {
             <Link to="/facilities" className="hover:text-[var(--color-primary)]">
               시설 보기
             </Link>
+            <Link to="/mypage" className="hover:text-[var(--color-primary)]">
+              마이페이지
+            </Link>
             {user ? (
               <>
                 <span className="text-gray-800">{user.name}</span>

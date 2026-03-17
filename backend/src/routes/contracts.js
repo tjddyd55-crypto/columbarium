@@ -17,11 +17,12 @@ contractsRouter.post('/', async (req, res, next) => {
     if (existing.rows.length > 0) {
       return res.status(409).json({ error: 'ACTIVE contract already exists for this seat' });
     }
+    const user_id = req.user?.id ?? null;
     const insert = await query(
-      `INSERT INTO contracts (seat_id, waitlist_id, user_name, price, status)
-       VALUES ($1, $2, $3, $4, 'PENDING')
+      `INSERT INTO contracts (seat_id, user_id, waitlist_id, user_name, price, status)
+       VALUES ($1, $2, $3, $4, $5, 'PENDING')
        RETURNING id`,
-      [seat_id, waitlist_id ?? null, user_name ?? null, price ?? null]
+      [seat_id, user_id, waitlist_id ?? null, user_name ?? null, price ?? null]
     );
     res.status(201).json(insert.rows[0]);
   } catch (e) {

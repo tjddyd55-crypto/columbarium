@@ -26,11 +26,12 @@ waitlistRouter.post('/', async (req, res, next) => {
         [seat_id, 'WAITING']
       );
       const position = (countResult.rows[0]?.c ?? 0) + 1;
+      const user_id = req.user?.id ?? null;
       const insertResult = await client.query(
-        `INSERT INTO waitlist (seat_id, user_name, user_phone, status, position)
-         VALUES ($1, $2, $3, 'WAITING', $4)
+        `INSERT INTO waitlist (seat_id, user_id, user_name, user_phone, status, position)
+         VALUES ($1, $2, $3, $4, 'WAITING', $5)
          RETURNING id`,
-        [seat_id, user_name ?? null, user_phone ?? null, position]
+        [seat_id, user_id, user_name ?? null, user_phone ?? null, position]
       );
       return insertResult.rows[0];
     });

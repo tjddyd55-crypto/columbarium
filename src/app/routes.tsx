@@ -10,6 +10,7 @@ import FacilityDetailPage from "./pages/FacilityDetailPage";
 import SeatSelectionPage from "./pages/SeatSelectionPage";
 import WaitlistPage from "./pages/WaitlistPage";
 import ContractPage from "./pages/ContractPage";
+import MyPage from "./pages/MyPage";
 import Dashboard from "./pages/Dashboard";
 import OperatorManagement from "./pages/OperatorManagement";
 import FacilityManagement from "./pages/FacilityManagement";
@@ -35,6 +36,7 @@ export const router = createBrowserRouter([
       { path: "contract/:seatId", Component: ContractPage },
       { path: "login", Component: UserLoginPage },
       { path: "signup", Component: SignupPage },
+      { path: "mypage", Component: MyPage },
     ],
   },
   {
@@ -45,8 +47,8 @@ export const router = createBrowserRouter([
       { path: "business", Component: OperatorManagement },
       { path: "facility", Component: FacilityManagement },
       { path: "seat", Component: UnitManagement },
-      { path: "queue", Component: QueueManagement },
-      { path: "contract", Component: ContractManagement },
+      { path: "waitlist", Component: QueueManagement },
+      { path: "contracts", Component: ContractManagement },
       { path: "resale", Component: ResaleManagement },
       { path: "member", Component: MemberManagement },
       { path: "notification", Component: NotificationManagement },
