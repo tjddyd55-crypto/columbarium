@@ -9,3 +9,7 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+*.local
+.idea/
+.vscode/
+.nyc_output/
