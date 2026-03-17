@@ -27,6 +27,9 @@ export function clearAuthStorage(): void {
 
 export type AuthUser = { id: string; login_id: string; name: string; role: string };
 export type AuthResponse = { token: string; user: AuthUser };
+type ApiEnvelope<T> =
+  | { success: true; data: T; error?: null; message?: string }
+  | { success: false; data?: null; error?: { code?: string; message?: string }; message?: string };
 
 // All paths are relative /api/... (proxied to backend in dev)
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
@@ -34,11 +37,24 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const token = getStoredToken();
   if (token) (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error((err as { error?: string }).error || res.statusText);
+  const body: unknown = await res.json().catch(() => null);
+  const envelope = body as ApiEnvelope<T> | null;
+  const isEnvelope = !!envelope && typeof envelope === 'object' && 'success' in envelope;
+
+  if (!res.ok || (isEnvelope && envelope.success === false)) {
+    const message =
+      (isEnvelope && envelope.error?.message) ||
+      (isEnvelope && envelope.message) ||
+      ((body as { error?: string } | null)?.error) ||
+      res.statusText ||
+      'Request failed';
+    throw new Error(message);
   }
-  return res.json();
+
+  if (isEnvelope && envelope.success === true) {
+    return envelope.data as T;
+  }
+  return body as T;
 }
 
 export const api = {
