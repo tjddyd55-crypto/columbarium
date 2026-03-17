@@ -13,16 +13,16 @@ import {
 } from "lucide-react";
 
 const menuItems = [
-  { path: "/", label: "대시보드", icon: LayoutDashboard },
-  { path: "/operators", label: "사업자 관리", icon: Building2, superAdminOnly: true },
-  { path: "/facilities", label: "시설 관리", icon: MapPin },
-  { path: "/units", label: "봉안함(칸) 관리", icon: Grid3x3 },
-  { path: "/queues", label: "대기열 관리", icon: ListOrdered },
-  { path: "/contracts", label: "계약 관리", icon: FileText },
-  { path: "/resales", label: "재판매 관리", icon: RefreshCw },
-  { path: "/members", label: "회원 관리", icon: Users },
-  { path: "/notifications", label: "알림 관리", icon: Bell },
-  { path: "/audit-log", label: "감사로그", icon: FileSearch },
+  { path: "/admin", label: "대시보드", icon: LayoutDashboard },
+  { path: "/admin/business", label: "사업자 관리", icon: Building2, superAdminOnly: true },
+  { path: "/admin/facility", label: "시설 관리", icon: MapPin },
+  { path: "/admin/seat", label: "봉안함(칸) 관리", icon: Grid3x3 },
+  { path: "/admin/queue", label: "대기열 관리", icon: ListOrdered },
+  { path: "/admin/contract", label: "계약 관리", icon: FileText },
+  { path: "/admin/resale", label: "재판매 관리", icon: RefreshCw },
+  { path: "/admin/member", label: "회원 관리", icon: Users },
+  { path: "/admin/notification", label: "알림 관리", icon: Bell },
+  { path: "/admin/audit", label: "감사로그", icon: FileSearch },
 ];
 
 export default function Sidebar() {
@@ -40,7 +40,7 @@ export default function Sidebar() {
         {menuItems.map((item) => {
           if (item.superAdminOnly && !isSuperAdmin) return null;
           
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname === item.path || (item.path !== "/admin" && location.pathname.startsWith(item.path));
           const Icon = item.icon;
           
           return (

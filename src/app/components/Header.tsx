@@ -5,7 +5,7 @@ export default function Header() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    navigate('/login');
+    navigate('/admin/login');
   };
 
   return (

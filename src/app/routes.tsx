@@ -1,6 +1,13 @@
 import { createBrowserRouter } from "react-router";
-import Layout from "./components/Layout";
+import UserLayout from "./components/UserLayout";
+import AdminLayout from "./components/AdminLayout";
 import Login from "./pages/Login";
+import HomePage from "./pages/HomePage";
+import FacilityListPage from "./pages/FacilityListPage";
+import FacilityDetailPage from "./pages/FacilityDetailPage";
+import SeatSelectionPage from "./pages/SeatSelectionPage";
+import WaitlistPage from "./pages/WaitlistPage";
+import ContractPage from "./pages/ContractPage";
 import Dashboard from "./pages/Dashboard";
 import OperatorManagement from "./pages/OperatorManagement";
 import FacilityManagement from "./pages/FacilityManagement";
@@ -14,23 +21,35 @@ import AuditLog from "./pages/AuditLog";
 
 export const router = createBrowserRouter([
   {
-    path: "/login",
-    Component: Login,
+    path: "/",
+    Component: UserLayout,
+    children: [
+      { index: true, Component: HomePage },
+      { path: "facilities", Component: FacilityListPage },
+      { path: "facilities/:id", Component: FacilityDetailPage },
+      { path: "seats/:id", Component: SeatSelectionPage },
+      { path: "waitlist/:seatId", Component: WaitlistPage },
+      { path: "contract/:seatId", Component: ContractPage },
+    ],
   },
   {
-    path: "/",
-    Component: Layout,
+    path: "/admin",
+    Component: AdminLayout,
     children: [
       { index: true, Component: Dashboard },
-      { path: "operators", Component: OperatorManagement },
-      { path: "facilities", Component: FacilityManagement },
-      { path: "units", Component: UnitManagement },
-      { path: "queues", Component: QueueManagement },
-      { path: "contracts", Component: ContractManagement },
-      { path: "resales", Component: ResaleManagement },
-      { path: "members", Component: MemberManagement },
-      { path: "notifications", Component: NotificationManagement },
-      { path: "audit-log", Component: AuditLog },
+      { path: "business", Component: OperatorManagement },
+      { path: "facility", Component: FacilityManagement },
+      { path: "seat", Component: UnitManagement },
+      { path: "queue", Component: QueueManagement },
+      { path: "contract", Component: ContractManagement },
+      { path: "resale", Component: ResaleManagement },
+      { path: "member", Component: MemberManagement },
+      { path: "notification", Component: NotificationManagement },
+      { path: "audit", Component: AuditLog },
     ],
+  },
+  {
+    path: "/admin/login",
+    Component: Login,
   },
 ]);
