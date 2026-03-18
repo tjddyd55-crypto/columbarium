@@ -70,7 +70,7 @@ export class AdminService {
     });
     return list.map((u) => ({
       id: String(u.id),
-      username: u.username,
+      loginId: u.loginId,
       name: u.name,
       phone: u.phone,
       email: u.email,

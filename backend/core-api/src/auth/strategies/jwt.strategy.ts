@@ -7,7 +7,7 @@ import { UserStatus } from '@prisma/client';
 
 export interface JwtPayload {
   sub: string;
-  username: string;
+  loginId: string;
 }
 
 @Injectable()
@@ -32,8 +32,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     const roleCode = user.roles[0]?.role?.code ?? 'USER';
     return {
       id: String(user.id),
-      username: user.username,
-      email: user.email ?? user.username,
+      loginId: user.loginId,
+      email: user.email ?? user.loginId,
       role: roleCode,
     };
   }

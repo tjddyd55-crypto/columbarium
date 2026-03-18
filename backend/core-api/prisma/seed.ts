@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 /** 시드용 수퍼관리자 계정 (운영 환경에서는 배포 후 비밀번호 변경 권장) */
 const SUPER_ADMIN_SEED = {
-  username: 'superadmin',
+  loginId: 'superadmin',
   password: 'SuperAdmin1!',
   name: '슈퍼관리자',
   birthDate: new Date('1990-01-01'),
@@ -24,9 +24,9 @@ async function main() {
 
   const passwordHash = await bcrypt.hash(SUPER_ADMIN_SEED.password, 10);
   const superAdminUser = await prisma.user.upsert({
-    where: { username: SUPER_ADMIN_SEED.username },
+    where: { loginId: SUPER_ADMIN_SEED.loginId },
     create: {
-      username: SUPER_ADMIN_SEED.username,
+      loginId: SUPER_ADMIN_SEED.loginId,
       passwordHash,
       name: SUPER_ADMIN_SEED.name,
       birthDate: SUPER_ADMIN_SEED.birthDate,
@@ -45,7 +45,7 @@ async function main() {
     });
   }
 
-  console.log('Seed 완료. 수퍼관리자 계정:', SUPER_ADMIN_SEED.username);
+  console.log('Seed 완료. 수퍼관리자 계정:', SUPER_ADMIN_SEED.loginId);
 }
 
 main()

@@ -14,7 +14,7 @@ export class AuthService {
   ) {}
 
   async signUp(dto: SignUpDto) {
-    const existing = await this.prisma.user.findUnique({ where: { username: dto.username } });
+    const existing = await this.prisma.user.findUnique({ where: { loginId: dto.loginId } });
     if (existing) throw new ConflictException('이미 사용 중인 아이디입니다.');
 
     const passwordHash = dto.password ? await bcrypt.hash(dto.password, 10) : null;
@@ -29,7 +29,7 @@ export class AuthService {
 
     const user = await this.prisma.user.create({
       data: {
-        username: dto.username,
+        loginId: dto.loginId,
         passwordHash,
         name: dto.name,
         birthDate,
@@ -51,7 +51,7 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     const user = await this.prisma.user.findUnique({
-      where: { username: dto.username },
+      where: { loginId: dto.loginId },
       include: { roles: { include: { role: true } }, operatorAdmins: { take: 1 } },
     });
     if (!user?.passwordHash) throw new UnauthorizedException('아이디 또는 비밀번호를 확인하세요.');
@@ -67,16 +67,16 @@ export class AuthService {
     return this.issueTokens(user);
   }
 
-  private issueTokens(user: { id: bigint; username: string; roles: { role: { code: string } }[]; operatorAdmins?: { operatorId: bigint }[] }) {
+  private issueTokens(user: { id: bigint; loginId: string; roles: { role: { code: string } }[]; operatorAdmins?: { operatorId: bigint }[] }) {
     const roleCode = user.roles[0]?.role?.code ?? 'USER';
     const operatorId = user.operatorAdmins?.[0]?.operatorId;
-    const payload = { sub: String(user.id), username: user.username };
+    const payload = { sub: String(user.id), loginId: user.loginId };
     const accessToken = this.jwtService.sign(payload);
     return {
       accessToken,
       user: {
         id: String(user.id),
-        username: user.username,
+        loginId: user.loginId,
         role: roleCode,
         ...(operatorId != null && { operatorId: String(operatorId) }),
       },

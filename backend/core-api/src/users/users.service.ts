@@ -20,6 +20,7 @@ export class UsersService {
     return {
       ...rest,
       id: String(rest.id),
+      login_id: rest.loginId,
       birthDate: rest.birthDate.toISOString().slice(0, 10),
       lastLoginAt: rest.lastLoginAt?.toISOString() ?? null,
       createdAt: rest.createdAt.toISOString(),

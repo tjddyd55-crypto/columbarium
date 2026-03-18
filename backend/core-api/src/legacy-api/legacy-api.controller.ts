@@ -27,17 +27,17 @@ export class LegacyApiController {
   ) {}
 
   /** 인증 응답 포맷: { success, data: { accessToken, user: { id, email, role } } } (login_id, name은 호환용) */
-  private authEnvelope(accessToken: string, user: { id: string; username: string; name?: string; email?: string | null; role: string }) {
+  private authEnvelope(accessToken: string, user: { id: string; loginId: string; name?: string; email?: string | null; role: string }) {
     return {
       success: true as const,
       data: {
         accessToken,
         user: {
           id: user.id,
-          email: user.email ?? user.username,
+          email: user.email ?? user.loginId,
           role: user.role,
-          login_id: user.username,
-          name: user.name ?? user.username,
+          login_id: user.loginId,
+          name: user.name ?? user.loginId,
         },
       },
     };
@@ -61,7 +61,7 @@ export class LegacyApiController {
       throw new BadRequestException('login_id, password, name, phone are required');
     }
     const result = await this.authService.signUp({
-      username: body.login_id.trim(),
+      loginId: body.login_id.trim(),
       password: body.password,
       name: body.name.trim(),
       birthDate: body.birth_date || '1970-01-01',
@@ -71,13 +71,13 @@ export class LegacyApiController {
     });
     const user = await this.prisma.user.findFirst({
       where: { id: BigInt(result.user.id) },
-      select: { id: true, username: true, name: true, email: true, roles: { include: { role: true } } },
+      select: { id: true, loginId: true, name: true, email: true, roles: { include: { role: true } } },
     });
     if (!user) throw new NotFoundException('user not found');
     const roleCode = user.roles[0]?.role?.code ?? 'USER';
     return this.authEnvelope(result.accessToken, {
       id: String(user.id),
-      username: user.username,
+      loginId: user.loginId,
       name: user.name,
       email: user.email,
       role: roleCode,
@@ -108,18 +108,18 @@ export class LegacyApiController {
       throw new BadRequestException('login_id and password are required');
     }
     const result = await this.authService.login({
-      username: body.login_id.trim(),
+      loginId: body.login_id.trim(),
       password: body.password,
     });
     const user = await this.prisma.user.findFirst({
       where: { id: BigInt(result.user.id) },
-      select: { id: true, username: true, name: true, email: true, roles: { include: { role: true } } },
+      select: { id: true, loginId: true, name: true, email: true, roles: { include: { role: true } } },
     });
     if (!user) throw new NotFoundException('user not found');
     const roleCode = user.roles[0]?.role?.code ?? 'USER';
     return this.authEnvelope(result.accessToken, {
       id: String(user.id),
-      username: user.username,
+      loginId: user.loginId,
       name: user.name,
       email: user.email,
       role: roleCode,
@@ -127,13 +127,14 @@ export class LegacyApiController {
   }
 
   @Get('auth/me')
-  async me(@CurrentUser() currentUser: { id: string; username: string; email?: string; role: string }) {
+  async me(@CurrentUser() currentUser: { id: string; loginId: string; email?: string; role: string }) {
     return {
       success: true as const,
       data: {
         user: {
           id: currentUser.id,
-          email: currentUser.email ?? currentUser.username,
+          login_id: currentUser.loginId,
+          email: currentUser.email ?? currentUser.loginId,
           role: currentUser.role,
         },
       },
@@ -283,7 +284,7 @@ export class LegacyApiController {
 
   @Post('contracts')
   async createContract(
-    @CurrentUser() user: { id: string; username: string },
+    @CurrentUser() user: { id: string; loginId: string },
     @Body() body: { seat_id?: string; waitlist_id?: string; user_name?: string; price?: number },
   ) {
     if (!body.seat_id) throw new BadRequestException('seat_id required');

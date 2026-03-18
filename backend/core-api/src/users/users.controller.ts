@@ -5,7 +5,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 interface JwtUser {
   id: string;
-  username: string;
+  loginId: string;
   role: string;
 }
 

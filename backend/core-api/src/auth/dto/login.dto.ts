@@ -4,7 +4,7 @@ export class LoginDto {
   @IsString()
   @MinLength(1)
   @MaxLength(64)
-  username: string;
+  loginId: string;
 
   @IsString()
   @MinLength(1)
