@@ -28,7 +28,7 @@ function resolveBaseUrl(): string {
 
 export type AdminLoginResponse = {
   token: string;
-  user: { id: string; login_id: string; name: string; role: string };
+  user: { id: string; login_id?: string; name?: string; email?: string; role: string };
 };
 
 export async function adminLogin(loginId: string, password: string): Promise<AdminLoginResponse> {
@@ -38,15 +38,29 @@ export async function adminLogin(loginId: string, password: string): Promise<Adm
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ login_id: loginId.trim(), password }),
   });
-  const body = (await res.json().catch(() => null)) as AdminLoginResponse | { error?: string; message?: string } | null;
+  const raw = await res.text();
+  let body: AdminLoginResponse | { success?: boolean; data?: AdminLoginResponse; error?: string; message?: string } | null = null;
+  try {
+    body = JSON.parse(raw) as typeof body;
+  } catch {
+    if (raw.trimStart().startsWith("<!") || raw.includes("<!DOCTYPE") || raw.includes("<html")) {
+      throw new Error("API 주소가 올바르지 않습니다. 백엔드 URL(VITE_API_BASE_URL)을 설정해 주세요.");
+    }
+    throw new Error("로그인 응답을 읽을 수 없습니다.");
+  }
   if (!res.ok) {
     const message = body && typeof body === "object" && "message" in body ? (body as { message?: string }).message : (body as { error?: string })?.error ?? res.statusText;
     throw new Error(message ?? "로그인에 실패했습니다.");
   }
-  if (!body || typeof body !== "object" || !("token" in body) || !body.token) {
+  const data = body && typeof body === "object" && "success" in body && (body as { data?: { accessToken?: string; token?: string; user?: AdminLoginResponse["user"] } }).data
+    ? (body as { data: { accessToken?: string; token?: string; user?: AdminLoginResponse["user"] } }).data
+    : (body as { token?: string; accessToken?: string; user?: AdminLoginResponse["user"] });
+  const token = data?.accessToken ?? data?.token;
+  const user = data?.user;
+  if (!token || !user) {
     throw new Error("로그인 응답 형식이 올바르지 않습니다.");
   }
-  return body as AdminLoginResponse;
+  return { token, user };
 }
 
 export async function adminRequest<T>(path: string, init: RequestInit = {}): Promise<T> {

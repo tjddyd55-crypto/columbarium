@@ -1,0 +1,46 @@
+// 디자인 토큰 (Tailwind/NativeWind 대체용 일관 스타일)
+export const theme = {
+  colors: {
+    primary: '#2563eb',
+    primaryDark: '#1d4ed8',
+    secondary: '#64748b',
+    success: '#22c55e',
+    warning: '#eab308',
+    danger: '#ef4444',
+    white: '#ffffff',
+    black: '#0f172a',
+    gray: {
+      50: '#f8fafc',
+      100: '#f1f5f9',
+      200: '#e2e8f0',
+      300: '#cbd5e1',
+      400: '#94a3b8',
+      500: '#64748b',
+      600: '#475569',
+      700: '#334155',
+      800: '#1e293b',
+      900: '#0f172a',
+    },
+  },
+  spacing: {
+    xs: 4,
+    sm: 8,
+    md: 16,
+    lg: 24,
+    xl: 32,
+  },
+  radius: {
+    sm: 6,
+    md: 10,
+    lg: 14,
+    full: 9999,
+  },
+  fontSize: {
+    xs: 12,
+    sm: 14,
+    base: 16,
+    lg: 18,
+    xl: 20,
+    '2xl': 24,
+  },
+};

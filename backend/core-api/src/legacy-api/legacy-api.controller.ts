@@ -26,6 +26,23 @@ export class LegacyApiController {
     private readonly unitService: UnitService,
   ) {}
 
+  /** 인증 응답 포맷: { success, data: { accessToken, user: { id, email, role } } } (login_id, name은 호환용) */
+  private authEnvelope(accessToken: string, user: { id: string; username: string; name?: string; email?: string | null; role: string }) {
+    return {
+      success: true as const,
+      data: {
+        accessToken,
+        user: {
+          id: user.id,
+          email: user.email ?? user.username,
+          role: user.role,
+          login_id: user.username,
+          name: user.name ?? user.username,
+        },
+      },
+    };
+  }
+
   @Public()
   @Post('auth/signup')
   async signUp(
@@ -54,18 +71,34 @@ export class LegacyApiController {
     });
     const user = await this.prisma.user.findFirst({
       where: { id: BigInt(result.user.id) },
-      select: { id: true, username: true, name: true, roles: { include: { role: true } } },
+      select: { id: true, username: true, name: true, email: true, roles: { include: { role: true } } },
     });
     if (!user) throw new NotFoundException('user not found');
-    return {
-      token: result.accessToken,
-      user: {
-        id: String(user.id),
-        login_id: user.username,
-        name: user.name,
-        role: user.roles[0]?.role?.code ?? 'USER',
-      },
-    };
+    const roleCode = user.roles[0]?.role?.code ?? 'USER';
+    return this.authEnvelope(result.accessToken, {
+      id: String(user.id),
+      username: user.username,
+      name: user.name,
+      email: user.email,
+      role: roleCode,
+    });
+  }
+
+  @Public()
+  @Post('auth/register')
+  async register(
+    @Body()
+    body: {
+      login_id?: string;
+      password?: string;
+      name?: string;
+      birth_date?: string;
+      phone?: string;
+      email?: string;
+      address?: string;
+    },
+  ) {
+    return this.signUp(body);
   }
 
   @Public()
@@ -80,16 +113,29 @@ export class LegacyApiController {
     });
     const user = await this.prisma.user.findFirst({
       where: { id: BigInt(result.user.id) },
-      select: { id: true, username: true, name: true, roles: { include: { role: true } } },
+      select: { id: true, username: true, name: true, email: true, roles: { include: { role: true } } },
     });
     if (!user) throw new NotFoundException('user not found');
+    const roleCode = user.roles[0]?.role?.code ?? 'USER';
+    return this.authEnvelope(result.accessToken, {
+      id: String(user.id),
+      username: user.username,
+      name: user.name,
+      email: user.email,
+      role: roleCode,
+    });
+  }
+
+  @Get('auth/me')
+  async me(@CurrentUser() currentUser: { id: string; username: string; email?: string; role: string }) {
     return {
-      token: result.accessToken,
-      user: {
-        id: String(user.id),
-        login_id: user.username,
-        name: user.name,
-        role: user.roles[0]?.role?.code ?? 'USER',
+      success: true as const,
+      data: {
+        user: {
+          id: currentUser.id,
+          email: currentUser.email ?? currentUser.username,
+          role: currentUser.role,
+        },
       },
     };
   }

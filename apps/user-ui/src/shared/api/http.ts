@@ -51,24 +51,35 @@ export async function requestJson<T>(
     headers,
   });
 
-  const payload = (await response.json().catch(() => null)) as ApiEnvelope<T> | null;
+  const payload = (await response.json().catch(() => null)) as ApiEnvelope<T> | Record<string, unknown> | null;
 
   if (!response.ok) {
-    const message = payload?.error?.message ?? "요청 처리에 실패했습니다.";
-    throw new ApiError(message, response.status, payload?.error?.code);
+    const errPayload = payload as ApiEnvelope<unknown> | null;
+    const message = errPayload?.error?.message ?? "요청 처리에 실패했습니다.";
+    throw new ApiError(message, response.status, errPayload?.error?.code);
   }
 
-  if (!payload?.success) {
+  if (!payload || typeof payload !== "object") {
+    throw new ApiError("응답을 읽을 수 없습니다.", response.status, "INVALID_RESPONSE");
+  }
+
+  const isEnvelope = "success" in payload && typeof (payload as ApiEnvelope<T>).success === "boolean";
+  if (!isEnvelope) {
+    return payload as T;
+  }
+
+  const envelope = payload as ApiEnvelope<T>;
+  if (envelope.success === false) {
     throw new ApiError(
-      payload?.error?.message ?? "요청 처리에 실패했습니다.",
+      envelope.error?.message ?? "요청 처리에 실패했습니다.",
       response.status,
-      payload?.error?.code,
+      envelope.error?.code,
     );
   }
 
-  if (payload.data === null) {
+  if (envelope.data === null || envelope.data === undefined) {
     throw new ApiError("응답 데이터가 없습니다.", response.status, "EMPTY_RESPONSE");
   }
 
-  return payload.data;
+  return envelope.data;
 }

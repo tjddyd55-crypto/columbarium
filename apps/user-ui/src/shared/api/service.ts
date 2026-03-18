@@ -81,19 +81,28 @@ export interface UserProfile {
   roles: string[];
 }
 
+/** 백엔드 인증 응답: success/data 봉투 안의 data */
+type AuthData = { accessToken?: string; token?: string; user: AuthUser };
+
 export const api = {
-  login(body: { login_id: string; password: string }) {
-    return requestJson<LoginResponse>("/api/auth/login", {
+  async login(body: { login_id: string; password: string }): Promise<LoginResponse> {
+    const data = await requestJson<AuthData>("/api/auth/login", {
       method: "POST",
       body: JSON.stringify(body),
     });
+    const token = data.accessToken ?? data.token;
+    if (!token || !data.user) throw new Error("로그인 응답 형식이 올바르지 않습니다.");
+    return { token, user: data.user };
   },
 
-  signup(body: SignUpRequest) {
-    return requestJson<LoginResponse>("/api/auth/signup", {
+  async signup(body: SignUpRequest): Promise<LoginResponse> {
+    const data = await requestJson<AuthData>("/api/auth/signup", {
       method: "POST",
       body: JSON.stringify(body),
     });
+    const token = data.accessToken ?? data.token;
+    if (!token || !data.user) throw new Error("회원가입 응답 형식이 올바르지 않습니다.");
+    return { token, user: data.user };
   },
 
   listFacilities() {
