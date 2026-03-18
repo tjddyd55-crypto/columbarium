@@ -1,0 +1,38 @@
+/**
+ * 비즈니스 에러 코드 (명세 8. 에러 처리 규칙)
+ */
+export const ErrorCode = {
+  INVALID_QUEUE_STATE: 'INVALID_QUEUE_STATE',
+  QUEUE_ALREADY_JOINED: 'QUEUE_ALREADY_JOINED',
+  NOT_ACTIVE_QUEUE: 'NOT_ACTIVE_QUEUE',
+  QUEUE_EXPIRED: 'QUEUE_EXPIRED',
+  CONTRACT_ALREADY_EXISTS: 'CONTRACT_ALREADY_EXISTS',
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  RESALE_NOT_APPROVED: 'RESALE_NOT_APPROVED',
+  NOT_FOUND: 'NOT_FOUND',
+  UNIT_NOT_AVAILABLE: 'UNIT_NOT_AVAILABLE',
+  RESALE_NOT_LISTED: 'RESALE_NOT_LISTED',
+  // Notifications (STEP 5)
+  INVALID_DEVICE_TOKEN: 'INVALID_DEVICE_TOKEN',
+  NOTIFICATION_NOT_FOUND: 'NOTIFICATION_NOT_FOUND',
+  NOTIFICATION_ALREADY_READ: 'NOTIFICATION_ALREADY_READ',
+  PUSH_PROVIDER_ERROR: 'PUSH_PROVIDER_ERROR',
+  SMS_PROVIDER_ERROR: 'SMS_PROVIDER_ERROR',
+  EMAIL_PROVIDER_ERROR: 'EMAIL_PROVIDER_ERROR',
+  NOTIFICATION_DISPATCH_FAILED: 'NOTIFICATION_DISPATCH_FAILED',
+  RETRY_LIMIT_EXCEEDED: 'RETRY_LIMIT_EXCEEDED',
+} as const;
+
+export type ErrorCodeType = (typeof ErrorCode)[keyof typeof ErrorCode];
+
+export class BusinessError extends Error {
+  constructor(
+    public readonly code: ErrorCodeType,
+    message: string,
+    public readonly statusCode: number = 400,
+  ) {
+    super(message);
+    this.name = 'BusinessError';
+    Object.setPrototypeOf(this, BusinessError.prototype);
+  }
+}

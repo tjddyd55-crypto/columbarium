@@ -1,0 +1,502 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//////////////////////////
+// ENUMS
+//////////////////////////
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum RoleCode {
+  SUPER_ADMIN
+  OPERATOR_ADMIN
+  SALES_MANAGER
+  USER
+}
+
+enum UnitStatus {
+  AVAILABLE
+  WAITING_QUEUE
+  ACTIVE_OFFER
+  CONTRACTED
+  RESALE_LISTED
+  BLOCKED
+}
+
+enum QueueStatus {
+  WAITING
+  ACTIVE
+  EXPIRED
+  COMPLETED
+  CANCELLED
+}
+
+enum ContractStatus {
+  PENDING
+  ACTIVE
+  TRANSFERRED
+  CANCELLED
+  EXPIRED
+}
+
+enum ContractType {
+  NEW
+  RESALE
+}
+
+enum ResaleStatus {
+  REQUESTED
+  APPROVED
+  LISTED
+  UNDER_CONTRACT
+  SOLD
+  REJECTED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  READY
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum NotificationChannel {
+  PUSH
+  SMS
+  EMAIL
+  IN_APP
+}
+
+enum NotificationStatus {
+  PENDING
+  SCHEDULED
+  SENT
+  FAILED
+  READ
+  CANCELLED
+}
+
+enum NotificationType {
+  QUEUE_7D_REMINDER
+  QUEUE_1D_REMINDER
+  QUEUE_ACTIVE_NOW
+  QUEUE_EXPIRE_SOON
+  CONTRACT_COMPLETED
+  RESALE_APPROVED
+  RESALE_REJECTED
+  QUEUE_CANCELLED
+  ADMIN_NOTICE
+}
+
+enum DevicePlatform {
+  IOS
+  ANDROID
+}
+
+//////////////////////////
+// USERS & AUTH
+//////////////////////////
+
+model User {
+  id                BigInt   @id @default(autoincrement())
+  username          String   @unique
+  passwordHash      String?
+  name              String
+  birthDate         DateTime
+  phone             String
+  email             String?
+  addressRoad       String?
+  addressDetail     String?
+  postalCode        String?
+  status            UserStatus @default(ACTIVE)
+  isPhoneVerified   Boolean  @default(false)
+  lastLoginAt       DateTime?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  authIdentities    AuthIdentity[]
+  roles             UserRole[]
+  queueEntries      QueueEntry[]
+  contractsAsBuyer  Contract[]    @relation("Buyer")
+  contractsAsSeller Contract[]     @relation("Seller")
+  resaleListings    ResaleListing[]
+  notifications     Notification[]
+  userDevices       UserDevice[]
+  operatorAdmins    OperatorAdmin[]
+}
+
+model OperatorAdmin {
+  id         BigInt   @id @default(autoincrement())
+  operatorId BigInt
+  userId     BigInt
+  createdAt  DateTime @default(now())
+
+  operator Operator @relation(fields: [operatorId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+
+  @@unique([operatorId, userId])
+}
+
+model AuthIdentity {
+  id              BigInt  @id @default(autoincrement())
+  userId          BigInt
+  provider        String  // LOCAL, NAVER, KAKAO
+  providerUserId  String
+  providerEmail   String?
+  providerPhone   String?
+
+  createdAt       DateTime @default(now())
+
+  user            User @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerUserId])
+}
+
+model PhoneVerification {
+  id                BigInt   @id @default(autoincrement())
+  phone             String
+  verificationCode  String
+  status            String   // PENDING, VERIFIED, EXPIRED
+  requestedAt       DateTime @default(now())
+  verifiedAt       DateTime?
+  expiresAt        DateTime
+}
+
+model Role {
+  id    BigInt   @id @default(autoincrement())
+  code  RoleCode @unique
+  name  String
+
+  users UserRole[]
+}
+
+model UserRole {
+  id      BigInt @id @default(autoincrement())
+  userId  BigInt
+  roleId  BigInt
+
+  user User @relation(fields: [userId], references: [id])
+  role Role @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId])
+}
+
+//////////////////////////
+// OPERATORS
+//////////////////////////
+
+model Operator {
+  id                 BigInt @id @default(autoincrement())
+  name               String
+  businessNo         String @unique
+  representativeName String?
+  contactPhone       String?
+  contactEmail       String?
+  addressRoad        String?
+  addressDetail      String?
+  postalCode         String?
+  status             String @default("ACTIVE")
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  facilities         Facility[]
+  memorialUnits      MemorialUnit[]
+  operatorAdmins     OperatorAdmin[]
+}
+
+//////////////////////////
+// FACILITIES
+//////////////////////////
+
+model Facility {
+  id           BigInt @id @default(autoincrement())
+  operatorId   BigInt
+  name         String
+  description  String?
+  phone        String?
+
+  addressRoad   String
+  addressJibun  String?
+  addressDetail String?
+  postalCode   String?
+
+  lat          Float?
+  lng          Float?
+
+  status       String @default("ACTIVE")
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  operator     Operator @relation(fields: [operatorId], references: [id])
+  units        MemorialUnit[]
+  queueEntries QueueEntry[]
+  resaleListings ResaleListing[]
+}
+
+//////////////////////////
+// MEMORIAL UNIT
+//////////////////////////
+
+model MemorialUnit {
+  id            BigInt @id @default(autoincrement())
+  operatorId    BigInt
+  facilityId    BigInt
+
+  rowCode       String
+  colNo         Int
+  unitCode      String
+
+  x             Float
+  y             Float
+  width         Float
+  height        Float
+
+  status        UnitStatus @default(AVAILABLE)
+
+  basePrice     Float
+  preSalePrice  Float?
+  contractYears Int @default(30)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  operator      Operator  @relation(fields: [operatorId], references: [id])
+  facility      Facility  @relation(fields: [facilityId], references: [id])
+  queueEntries  QueueEntry[]
+  contracts     Contract[]
+  resaleListings ResaleListing[]
+
+  @@unique([facilityId, unitCode])
+}
+
+//////////////////////////
+// QUEUE (핵심)
+//////////////////////////
+
+model QueueEntry {
+  id              BigInt @id @default(autoincrement())
+  operatorId      BigInt
+  facilityId      BigInt
+  unitId          BigInt
+  userId          BigInt
+
+  queuePosition   Int
+  status          QueueStatus @default(WAITING)
+
+  activatedAt     DateTime?
+  expiresAt      DateTime?
+
+  notified7dAt    DateTime?
+  notified1dAt   DateTime?
+  notifiedActiveAt DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User @relation(fields: [userId], references: [id])
+  unit            MemorialUnit @relation(fields: [unitId], references: [id])
+  facility        Facility @relation(fields: [facilityId], references: [id])
+
+  @@unique([unitId, userId])
+  @@index([unitId, status, queuePosition])
+}
+
+//////////////////////////
+// CONTRACT
+//////////////////////////
+
+model Contract {
+  id              BigInt @id @default(autoincrement())
+  contractNo      String @unique
+
+  operatorId      BigInt
+  facilityId      BigInt
+  unitId          BigInt
+
+  buyerUserId     BigInt
+  sellerUserId    BigInt?
+
+  contractType    ContractType
+  status          ContractStatus @default(PENDING)
+
+  basePrice       Float
+  discountAmount  Float @default(0)
+  finalPrice      Float
+
+  startDate       DateTime
+  endDate         DateTime
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  unit            MemorialUnit @relation(fields: [unitId], references: [id])
+  buyer           User @relation("Buyer", fields: [buyerUserId], references: [id])
+  seller          User? @relation("Seller", fields: [sellerUserId], references: [id])
+  paymentRecords  PaymentRecord[]
+
+  @@index([buyerUserId])
+}
+
+//////////////////////////
+// RESALE
+//////////////////////////
+
+model ResaleListing {
+  id                BigInt @id @default(autoincrement())
+  operatorId        BigInt
+  facilityId        BigInt
+  unitId            BigInt
+  sellerUserId      BigInt
+
+  askingPrice       Float
+  status            ResaleStatus @default(REQUESTED)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  seller            User @relation(fields: [sellerUserId], references: [id])
+  facility          Facility @relation(fields: [facilityId], references: [id])
+  unit              MemorialUnit @relation(fields: [unitId], references: [id])
+}
+
+//////////////////////////
+// PAYMENT
+//////////////////////////
+
+model PaymentRecord {
+  id          BigInt   @id @default(autoincrement())
+  contractId  BigInt
+  amount      Float
+  status      PaymentStatus @default(READY)
+
+  requestedAt DateTime @default(now())
+  paidAt      DateTime?
+
+  createdAt   DateTime @default(now())
+
+  contract    Contract @relation(fields: [contractId], references: [id])
+}
+
+//////////////////////////
+// USER DEVICES (push token)
+//////////////////////////
+
+model UserDevice {
+  id          BigInt         @id @default(autoincrement())
+  userId      BigInt
+  platform    DevicePlatform
+  pushToken   String
+  appVersion  String?
+  deviceModel String?
+  isActive    Boolean        @default(true)
+  lastSeenAt  DateTime?
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  user        User           @relation(fields: [userId], references: [id])
+
+  @@unique([userId, pushToken])
+}
+
+//////////////////////////
+// NOTIFICATION
+//////////////////////////
+
+model Notification {
+  id                 BigInt              @id @default(autoincrement())
+  userId             BigInt
+  type               NotificationType    @default(ADMIN_NOTICE)
+  title              String
+  body               String
+  channel            NotificationChannel
+  status             NotificationStatus   @default(PENDING)
+
+  relatedTable       String?
+  relatedId          String?
+  metadata           Json?
+
+  scheduledAt        DateTime?
+  sentAt             DateTime?
+  failedAt           DateTime?
+  readAt             DateTime?
+  retryCount         Int                  @default(0)
+
+  providerName       String?
+  providerMessageId  String?
+  errorCode          String?
+  errorMessage       String?
+
+  dedupeKey          String?              @unique
+
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  user               User                 @relation(fields: [userId], references: [id])
+  notificationLogs   NotificationLog[]
+
+  @@index([userId, status])
+}
+
+//////////////////////////
+// NOTIFICATION LOG (발송 시도 기록)
+//////////////////////////
+
+model NotificationLog {
+  id              BigInt   @id @default(autoincrement())
+  notificationId  BigInt
+  attemptNo       Int
+  channel         NotificationChannel
+  providerName    String?
+  requestPayload  Json?
+  responsePayload Json?
+  status          String   // SUCCESS, FAILED
+  errorMessage    String?
+
+  createdAt       DateTime @default(now())
+
+  notification    Notification @relation(fields: [notificationId], references: [id])
+
+  @@index([notificationId])
+}
+
+//////////////////////////
+// AUDIT LOG (STEP 6)
+//////////////////////////
+
+model AuditLog {
+  id          BigInt   @id @default(autoincrement())
+  userId      BigInt?
+  userRole    String?
+  action      String
+  entityType  String   // USER, CONTRACT, UNIT, QUEUE, RESALE, OPERATOR, FACILITY 등
+  entityId    String?
+  beforeData  Json?
+  afterData   Json?
+  ipAddress   String?
+  userAgent   String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([action])
+  @@index([createdAt])
+}
