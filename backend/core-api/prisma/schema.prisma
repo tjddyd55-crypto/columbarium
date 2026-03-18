@@ -1,5 +1,7 @@
 generator client {
   provider = "prisma-client-js"
+  // Railway의 node:20-slim(debian bookworm, openssl 3) 런타임 타깃 고정
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
