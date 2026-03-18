@@ -4,9 +4,14 @@ WORKDIR /app
 
 COPY . .
 
-RUN cd backend/core-api && npm install
-RUN cd backend/core-api && npm run build
-
+# core-api로 이동
 WORKDIR /app/backend/core-api
 
+# 설치
+RUN npm install
+
+# 빌드
+RUN npm run build
+
+# 실행
 CMD ["node", "dist/main.js"]
