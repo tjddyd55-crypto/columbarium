@@ -32,4 +32,4 @@ COPY --from=builder /app/backend/core-api/prisma ./prisma
 # prisma client
 RUN npx prisma generate
 
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/src/main.js"]
