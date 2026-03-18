@@ -6,6 +6,7 @@ export interface LoginResponse {
   user: AuthUser;
 }
 
+/** 회원가입 요청: login_id=로그인용 아이디, name=개인정보(실명) */
 export interface SignUpRequest {
   login_id: string;
   password: string;

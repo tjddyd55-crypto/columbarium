@@ -11,9 +11,9 @@ import { setSession } from "../../shared/auth/session";
 export function SignupPage() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    username: "",
+    loginId: "", // 로그인용 아이디 (API: login_id)
     password: "",
-    name: "",
+    name: "", // 개인정보: 실명 (API: name)
     birthdate: "",
     phone: "",
     email: "",
@@ -32,7 +32,7 @@ export function SignupPage() {
     setError("");
     try {
       const result = await api.signup({
-        login_id: formData.username.trim(),
+        login_id: formData.loginId.trim(),
         password: formData.password,
         name: formData.name.trim(),
         birth_date: formData.birthdate,
@@ -66,15 +66,16 @@ export function SignupPage() {
       {/* Form */}
       <form onSubmit={handleSubmit} className="p-6 space-y-5">
         <div>
-          <Label htmlFor="username" className="text-gray-700 mb-2 block">
+          <Label htmlFor="loginId" className="text-gray-700 mb-2 block">
             아이디
           </Label>
           <Input
-            id="username"
+            id="loginId"
             type="text"
-            value={formData.username}
-            onChange={(e) => handleChange("username", e.target.value)}
-            placeholder="아이디를 입력하세요"
+            autoComplete="username"
+            value={formData.loginId}
+            onChange={(e) => handleChange("loginId", e.target.value)}
+            placeholder="로그인 시 사용할 아이디"
             className="h-14 bg-gray-50 border-gray-200 rounded-xl"
             required
           />
@@ -102,9 +103,10 @@ export function SignupPage() {
           <Input
             id="name"
             type="text"
+            autoComplete="name"
             value={formData.name}
             onChange={(e) => handleChange("name", e.target.value)}
-            placeholder="이름을 입력하세요"
+            placeholder="실명 (개인정보)"
             className="h-14 bg-gray-50 border-gray-200 rounded-xl"
             required
           />

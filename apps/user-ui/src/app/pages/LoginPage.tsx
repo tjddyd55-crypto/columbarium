@@ -9,7 +9,7 @@ import { setSession } from "../../shared/auth/session";
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
+  const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -20,7 +20,7 @@ export function LoginPage() {
     setError("");
     try {
       const result = await api.login({
-        login_id: username.trim(),
+        login_id: loginId.trim(),
         password,
       });
       setSession(result.token, result.user);
@@ -52,15 +52,16 @@ export function LoginPage() {
         {/* Login Form */}
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <Label htmlFor="username" className="text-gray-700 mb-2 block">
+            <Label htmlFor="loginId" className="text-gray-700 mb-2 block">
               아이디
             </Label>
             <Input
-              id="username"
+              id="loginId"
               type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="아이디를 입력하세요"
+              autoComplete="username"
+              value={loginId}
+              onChange={(e) => setLoginId(e.target.value)}
+              placeholder="로그인 시 사용할 아이디"
               className="h-14 bg-gray-50 border-gray-200 rounded-xl"
             />
           </div>
