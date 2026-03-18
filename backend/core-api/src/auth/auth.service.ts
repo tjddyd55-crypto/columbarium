@@ -21,8 +21,11 @@ export class AuthService {
     const birthDate = dto.birthDate ? new Date(dto.birthDate) : new Date(0); // 스키마상 필수
     const phone = dto.phone ?? '';
 
-    const userRole = await this.prisma.role.findUnique({ where: { code: 'USER' } });
-    if (!userRole) throw new ConflictException('시스템 설정이 완료되지 않았습니다. 관리자에게 문의하세요.');
+    const userRole = await this.prisma.role.upsert({
+      where: { code: 'USER' },
+      create: { code: 'USER', name: '일반 사용자' },
+      update: {},
+    });
 
     const user = await this.prisma.user.create({
       data: {

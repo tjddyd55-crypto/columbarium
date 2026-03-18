@@ -33,4 +33,4 @@ COPY --from=builder /app/backend/core-api/prisma ./prisma
 # Prisma 엔진/클라이언트 보장
 RUN npx prisma generate
 
-CMD ["node", "dist/src/main.js"]
+CMD ["npm", "run", "start:prod"]
