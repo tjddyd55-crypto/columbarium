@@ -1,8 +1,8 @@
-# 납골당 분양 플랫폼 관리자 대시보드 - Cursor AI 구현 가이드
+# 봉안당 분양 플랫폼 관리자 대시보드 - Cursor AI 구현 가이드
 
 ## 🎯 프로젝트 개요
 
-납골당(납골당) 분양 플랫폼의 관리자 웹 대시보드입니다.
+봉안당 분양 플랫폼의 관리자 웹 대시보드입니다.
 - **컬러**: 네이비(#1E293B) + 블루(#3B82F6)
 - **기술**: React + TypeScript + Vite + React Router + Tailwind CSS v4
 - **주요 기능**: 11개 관리 화면 + 상세 모달 + 필터 시스템
@@ -203,7 +203,7 @@ export default function Sidebar() {
   return (
     <div className="w-64 bg-[#1E293B] h-screen fixed left-0 top-0 text-white flex flex-col">
       <div className="p-6 border-b border-slate-700">
-        <h1 className="text-xl font-bold">납골당 관리자</h1>
+        <h1 className="text-xl font-bold">봉안당 관리자</h1>
         <p className="text-sm text-slate-400 mt-1">Admin Dashboard</p>
       </div>
       
@@ -423,7 +423,7 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-br from-[var(--color-secondary)] to-[var(--color-secondary-dark)] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-[var(--color-primary)] mb-2">납골당</h1>
+          <h1 className="text-4xl font-bold text-[var(--color-primary)] mb-2">봉안당</h1>
           <p className="text-gray-600">관리자 대시보드</p>
         </div>
 
@@ -481,11 +481,11 @@ import { Building2, FileText, ListOrdered, TrendingUp, Grid3x3 } from "lucide-re
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 const recentContracts = [
-  { id: "C-2026-001", buyer: "김철수", facility: "강남 납골당", unit: "A-101", amount: "5,000,000원", status: "COMPLETED", date: "2026-03-17" },
-  { id: "C-2026-002", buyer: "이영희", facility: "서초 납골당", unit: "B-205", amount: "4,500,000원", status: "PENDING", date: "2026-03-17" },
-  { id: "C-2026-003", buyer: "박민수", facility: "강남 납골당", unit: "A-203", amount: "5,200,000원", status: "ACTIVE", date: "2026-03-16" },
-  { id: "C-2026-004", buyer: "정수진", facility: "역삼 납골당", unit: "C-108", amount: "4,800,000원", status: "COMPLETED", date: "2026-03-16" },
-  { id: "C-2026-005", buyer: "최동욱", facility: "서초 납골당", unit: "B-301", amount: "5,100,000원", status: "ACTIVE", date: "2026-03-15" },
+  { id: "C-2026-001", buyer: "김철수", facility: "강남 봉안당", unit: "A-101", amount: "5,000,000원", status: "COMPLETED", date: "2026-03-17" },
+  { id: "C-2026-002", buyer: "이영희", facility: "서초 봉안당", unit: "B-205", amount: "4,500,000원", status: "PENDING", date: "2026-03-17" },
+  { id: "C-2026-003", buyer: "박민수", facility: "강남 봉안당", unit: "A-203", amount: "5,200,000원", status: "ACTIVE", date: "2026-03-16" },
+  { id: "C-2026-004", buyer: "정수진", facility: "역삼 봉안당", unit: "C-108", amount: "4,800,000원", status: "COMPLETED", date: "2026-03-16" },
+  { id: "C-2026-005", buyer: "최동욱", facility: "서초 봉안당", unit: "B-301", amount: "5,100,000원", status: "ACTIVE", date: "2026-03-15" },
 ];
 
 const chartData = [
@@ -945,7 +945,7 @@ const contracts = [
   { 
     contractNo: "C-2026-001", 
     buyer: "김철수", 
-    facility: "강남 납골당", 
+    facility: "강남 봉안당", 
     unit: "A-101",
     contractYears: 30,
     amount: "5,000,000원", 
@@ -956,7 +956,7 @@ const contracts = [
   { 
     contractNo: "C-2026-002", 
     buyer: "이영희", 
-    facility: "서초 납골당", 
+    facility: "서초 봉안당", 
     unit: "B-205",
     contractYears: 30,
     amount: "4,500,000원", 
@@ -967,7 +967,7 @@ const contracts = [
   { 
     contractNo: "C-2026-003", 
     buyer: "박민수", 
-    facility: "강남 납골당", 
+    facility: "강남 봉안당", 
     unit: "A-203",
     contractYears: 20,
     amount: "3,200,000원", 
@@ -978,7 +978,7 @@ const contracts = [
   { 
     contractNo: "C-2026-004", 
     buyer: "정수진", 
-    facility: "역삼 납골당", 
+    facility: "역삼 봉안당", 
     unit: "C-108",
     contractYears: 50,
     amount: "7,800,000원", 
@@ -1090,8 +1090,8 @@ export default function ContractManagement() {
               <div className="relative">
                 <select className="w-full px-4 py-2 border border-[#E5E7EB] rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-[#3B82F6]">
                   <option>전체</option>
-                  <option>강남 납골당</option>
-                  <option>서초 납골당</option>
+                  <option>강남 봉안당</option>
+                  <option>서초 봉안당</option>
                 </select>
                 <ChevronDown className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
               </div>
@@ -1221,7 +1221,7 @@ const resales = [
     id: 1,
     seller: "김철수", 
     buyer: null,
-    facility: "강남 납골당", 
+    facility: "강남 봉안당", 
     unit: "A-101",
     originalPrice: "5,000,000원",
     resalePrice: "4,800,000원", 
@@ -1233,7 +1233,7 @@ const resales = [
     id: 2,
     seller: "이영희", 
     buyer: null,
-    facility: "서초 납골당", 
+    facility: "서초 봉안당", 
     unit: "B-205",
     originalPrice: "4,500,000원",
     resalePrice: "4,300,000원", 
@@ -1246,7 +1246,7 @@ const resales = [
     id: 3,
     seller: "박민수", 
     buyer: "홍길동",
-    facility: "강남 납골당", 
+    facility: "강남 봉안당", 
     unit: "A-203",
     originalPrice: "5,200,000원",
     resalePrice: "5,000,000원", 
@@ -1259,7 +1259,7 @@ const resales = [
     id: 4,
     seller: "정수진", 
     buyer: "강감찬",
-    facility: "역삼 납골당", 
+    facility: "역삼 봉안당", 
     unit: "C-108",
     originalPrice: "4,800,000원",
     resalePrice: "4,600,000원", 
@@ -1272,7 +1272,7 @@ const resales = [
     id: 5,
     seller: "최동욱", 
     buyer: null,
-    facility: "서초 납골당", 
+    facility: "서초 봉안당", 
     unit: "B-301",
     originalPrice: "5,100,000원",
     resalePrice: "5,200,000원", 
@@ -1388,8 +1388,8 @@ export default function ResaleManagement() {
               <div className="relative">
                 <select className="w-full px-4 py-2 border border-[#E5E7EB] rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-[#3B82F6]">
                   <option>전체</option>
-                  <option>강남 납골당</option>
-                  <option>서초 납골당</option>
+                  <option>강남 봉안당</option>
+                  <option>서초 봉안당</option>
                 </select>
                 <ChevronDown className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
               </div>
@@ -1534,7 +1534,7 @@ export default function ResaleManagement() {
 4. 다음 프롬프트 입력:
 
 ```
-위 가이드대로 납골당 관리자 대시보드를 전체 구현해줘.
+위 가이드대로 봉안당 관리자 대시보드를 전체 구현해줘.
 모든 파일을 순서대로 생성하고, 코드는 있는 그대로 사용해줘.
 ```
 

@@ -72,7 +72,7 @@ export interface ContractEntry {
 
 export interface UserProfile {
   id: string;
-  username: string;
+  login_id: string;
   name: string;
   phone: string;
   email: string | null;

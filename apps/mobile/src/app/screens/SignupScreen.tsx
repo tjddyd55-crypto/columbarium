@@ -29,7 +29,7 @@ export default function SignupScreen() {
     setLoading(true);
     try {
       const res = await authApi.signup({
-        username: username.trim(),
+        login_id: username.trim(),
         password,
         name: name.trim(),
         birthDate,

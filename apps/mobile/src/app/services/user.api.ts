@@ -3,7 +3,7 @@ import type { ApiResponse } from '../types/api';
 
 export interface MeResponse {
   id: string;
-  username: string;
+  login_id: string;
   name: string;
   birthDate: string;
   phone: string;

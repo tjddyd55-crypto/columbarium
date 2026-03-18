@@ -17,7 +17,7 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-br from-[var(--color-secondary)] to-[var(--color-secondary-dark)] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full p-8">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-[var(--color-primary)] mb-2">납골당</h1>
+          <h1 className="text-4xl font-bold text-[var(--color-primary)] mb-2">봉안당</h1>
           <p className="text-gray-600">관리자 대시보드</p>
         </div>
 

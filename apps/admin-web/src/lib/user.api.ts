@@ -2,7 +2,7 @@ import { api, ApiResponse } from './api';
 
 export interface UserListItem {
   id: string;
-  username: string;
+  loginId: string;
   name: string;
   phone: string;
   email?: string;

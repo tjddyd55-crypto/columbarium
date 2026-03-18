@@ -1,6 +1,6 @@
 /**
  * 관리자 로그인용 API.
- * - 아이디(사용자 입력) → API body의 login_id로 전송. 백엔드는 이를 DB username으로 조회합니다.
+ * - 아이디(사용자 입력) → API body의 login_id로 전송. 백엔드는 이를 DB loginId로 조회합니다.
  * - 응답: { token, user: { id, login_id, name, role } }
  */
 const ADMIN_TOKEN_KEY = "admin_token";
@@ -31,6 +31,24 @@ export type AdminLoginResponse = {
   user: { id: string; login_id?: string; name?: string; email?: string; role: string };
 };
 
+type Envelope<T> = { success: boolean; data: T | null; error?: { message?: string } | null; message?: string };
+
+function isEnvelope(value: unknown): value is Envelope<unknown> {
+  return !!value && typeof value === "object" && "success" in value;
+}
+
+function unwrapSuccess<T>(value: unknown): T {
+  let current: unknown = value;
+  for (let i = 0; i < 3; i += 1) {
+    if (!isEnvelope(current)) break;
+    if (current.success === false) {
+      throw new Error(current.error?.message ?? current.message ?? "로그인에 실패했습니다.");
+    }
+    current = current.data;
+  }
+  return current as T;
+}
+
 export async function adminLogin(loginId: string, password: string): Promise<AdminLoginResponse> {
   const url = `${resolveBaseUrl()}/api/auth/login`;
   const res = await fetch(url, {
@@ -39,7 +57,7 @@ export async function adminLogin(loginId: string, password: string): Promise<Adm
     body: JSON.stringify({ login_id: loginId.trim(), password }),
   });
   const raw = await res.text();
-  let body: AdminLoginResponse | { success?: boolean; data?: AdminLoginResponse; error?: string; message?: string } | null = null;
+  let body: unknown = null;
   try {
     body = JSON.parse(raw) as typeof body;
   } catch {
@@ -49,12 +67,11 @@ export async function adminLogin(loginId: string, password: string): Promise<Adm
     throw new Error("로그인 응답을 읽을 수 없습니다.");
   }
   if (!res.ok) {
-    const message = body && typeof body === "object" && "message" in body ? (body as { message?: string }).message : (body as { error?: string })?.error ?? res.statusText;
-    throw new Error(message ?? "로그인에 실패했습니다.");
+    const rawMessage = body && typeof body === "object" && "message" in body ? (body as { message?: unknown }).message : (body as { error?: string })?.error ?? res.statusText;
+    const message = typeof rawMessage === "string" ? rawMessage : res.status === 401 ? "아이디 또는 비밀번호를 확인해 주세요." : "로그인에 실패했습니다.";
+    throw new Error(message);
   }
-  const data = body && typeof body === "object" && "success" in body && (body as { data?: { accessToken?: string; token?: string; user?: AdminLoginResponse["user"] } }).data
-    ? (body as { data: { accessToken?: string; token?: string; user?: AdminLoginResponse["user"] } }).data
-    : (body as { token?: string; accessToken?: string; user?: AdminLoginResponse["user"] });
+  const data = unwrapSuccess<{ accessToken?: string; token?: string; user?: AdminLoginResponse["user"] }>(body);
   const token = data?.accessToken ?? data?.token;
   const user = data?.user;
   if (!token || !user) {

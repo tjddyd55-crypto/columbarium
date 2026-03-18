@@ -18,7 +18,7 @@ export default function UsersPage() {
           data={list}
           keyExtractor={(r: { id: string }) => r.id}
           columns={[
-            { key: 'username', label: '아이디' },
+            { key: 'loginId', label: '아이디' },
             { key: 'name', label: '이름' },
             { key: 'phone', label: '연락처' },
             { key: 'email', label: '이메일' },

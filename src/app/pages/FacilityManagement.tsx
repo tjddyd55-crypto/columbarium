@@ -4,9 +4,9 @@ import StatusBadge from '../components/StatusBadge';
 import { Plus, Search, MapPin, Eye, Edit } from 'lucide-react';
 
 const facilities = [
-  { id: 1, name: '강남점 1호점', operator: '강남 납골당', address: '서울 강남구 테헤란로 123', units: 50, status: 'ACTIVE', occupancy: '85%' },
-  { id: 2, name: '강남점 2호점', operator: '강남 납골당', address: '서울 강남구 역삼로 456', units: 40, status: 'ACTIVE', occupancy: '92%' },
-  { id: 3, name: '서초 본점', operator: '서초 납골당', address: '서울 서초구 서초대로 789', units: 60, status: 'MAINTENANCE', occupancy: '0%' },
+  { id: 1, name: '강남점 1호점', operator: '강남 봉안당', address: '서울 강남구 테헤란로 123', units: 50, status: 'ACTIVE', occupancy: '85%' },
+  { id: 2, name: '강남점 2호점', operator: '강남 봉안당', address: '서울 강남구 역삼로 456', units: 40, status: 'ACTIVE', occupancy: '92%' },
+  { id: 3, name: '서초 본점', operator: '서초 봉안당', address: '서울 서초구 서초대로 789', units: 60, status: 'MAINTENANCE', occupancy: '0%' },
 ];
 
 export default function FacilityManagement() {

@@ -3,7 +3,7 @@ export const AUTH_USER_KEY = 'admin_user';
 
 export interface AuthUser {
   id: string;
-  username: string;
+  login_id: string;
   role: string;
   operatorId?: string;
 }

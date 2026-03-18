@@ -32,7 +32,7 @@ export default function Sidebar() {
   return (
     <div className="w-64 bg-[#1E293B] h-screen fixed left-0 top-0 text-white flex flex-col">
       <div className="p-6 border-b border-slate-700">
-        <h1 className="text-xl font-bold">납골당 관리자</h1>
+        <h1 className="text-xl font-bold">봉안당 관리자</h1>
         <p className="text-sm text-slate-400 mt-1">Admin Dashboard</p>
       </div>
       

@@ -7,7 +7,7 @@ export default function HomePage() {
     <div className="space-y-10 py-8">
       <section className="text-center space-y-4">
         <h1 className="text-3xl font-bold text-[var(--color-primary)]">
-          납골당 서비스
+          봉안당 서비스
         </h1>
         <p className="text-gray-600 w-full">
           안심하고 봉안할 수 있는 시설을 찾아보세요.
@@ -23,7 +23,7 @@ export default function HomePage() {
           시설 목록 보기
         </button>
         <p className="text-sm text-gray-500">
-          가까운 납골당 시설을 검색하고 봉안함을 예약할 수 있습니다.
+          가까운 봉안당 시설을 검색하고 봉안함을 예약할 수 있습니다.
         </p>
       </section>
     </div>

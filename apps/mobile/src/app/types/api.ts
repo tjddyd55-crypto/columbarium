@@ -7,7 +7,7 @@ export interface ApiResponse<T> {
 
 export interface User {
   id: string;
-  username: string;
+  login_id: string;
   role: string;
 }
 

@@ -67,7 +67,7 @@ export function HomePage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white px-6 pt-6 pb-4">
-        <h1 className="text-2xl mb-4 text-gray-900">납골당</h1>
+        <h1 className="text-2xl mb-4 text-gray-900">봉안당</h1>
         
         {/* Search Bar */}
         <div className="relative">
@@ -98,7 +98,7 @@ export function HomePage() {
 
       {/* Recommended */}
       <div className="px-6 py-4">
-        <h2 className="text-xl mb-4 text-gray-900">추천 납골당</h2>
+        <h2 className="text-xl mb-4 text-gray-900">추천 봉안당</h2>
         {loading ? (
           <p className="text-sm text-gray-500">시설 정보를 불러오는 중...</p>
         ) : error ? (

@@ -1,15 +1,15 @@
-# 납골당 분양 플랫폼 관리자 대시보드 - 변경사항
+# 봉안당 분양 플랫폼 관리자 대시보드 - 변경사항
 
 ## 📋 주요 업데이트 내역
 
-### 🔄 1. 용어 변경 (납골당 전문 용어)
+### 🔄 1. 용어 변경 (봉안당 전문 용어)
 
 #### Before (카페/스터디룸 용어)
 - ❌ Seat / 좌석
 - ❌ 분 단위 대기
 - ❌ 단기 계약 (1년)
 
-#### After (납골당 전문 용어) 
+#### After (봉안당 전문 용어) 
 - ✅ Unit / MemorialUnit / 봉안함 / 안치칸
 - ✅ 개월 단위 대기
 - ✅ 장기 계약 (20년, 30년, 50년)
@@ -34,7 +34,7 @@
 {
   position: 1,
   user: "김철수",
-  facility: "강남 납골당",
+  facility: "강남 봉안당",
   unit: "A-101",
   waitingCount: 12,        // 총 대기 인원
   estimatedMonths: 3,      // 예상 대기 기간 (개월)
@@ -67,7 +67,7 @@
 {
   contractNo: "C-2026-001",
   buyer: "김철수",          // user → buyer
-  facility: "강남 납골당",
+  facility: "강남 봉안당",
   unit: "A-101",
   contractYears: 30,       // 계약 기간 (년)
   amount: "5,000,000원",
@@ -102,7 +102,7 @@
 {
   seller: "김철수",
   buyer: null,  // 승인 전까지 null
-  facility: "강남 납골당",
+  facility: "강남 봉안당",
   unit: "A-101",
   originalPrice: "5,000,000원",
   resalePrice: "4,800,000원",

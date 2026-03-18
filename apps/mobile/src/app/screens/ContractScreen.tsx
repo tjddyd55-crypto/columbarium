@@ -17,7 +17,7 @@ export default function ContractScreen() {
     <Layout scroll padded safe>
       <Text style={styles.section}>회원 정보</Text>
       <Text style={styles.row}>이름: {user?.name ?? '-'}</Text>
-      <Text style={styles.row}>아이디: {user?.username ?? '-'}</Text>
+      <Text style={styles.row}>아이디: {user?.login_id ?? '-'}</Text>
       <Text style={styles.section}>계약 정보</Text>
       <Text style={styles.row}>칸 ID: {params.unitId}</Text>
       <Text style={styles.row}>대기열 ID: {params.queueEntryId}</Text>

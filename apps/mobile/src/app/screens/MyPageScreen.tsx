@@ -18,8 +18,8 @@ export default function MyPageScreen() {
     <Layout scroll padded safe>
       <View style={styles.section}>
         <Text style={styles.label}>내 정보</Text>
-        <Text style={styles.value}>이름: {me?.name ?? user?.username ?? '-'}</Text>
-        <Text style={styles.value}>아이디: {user?.username ?? '-'}</Text>
+        <Text style={styles.value}>이름: {me?.name ?? user?.login_id ?? '-'}</Text>
+        <Text style={styles.value}>아이디: {user?.login_id ?? '-'}</Text>
       </View>
       <Button title="내 계약" variant="outline" onPress={() => navigation.getParent()?.navigate('Contract' as never)} style={styles.btn} />
       <Button title="내 대기열" variant="outline" onPress={() => navigation.getParent()?.navigate('Queue' as never)} style={styles.btn} />

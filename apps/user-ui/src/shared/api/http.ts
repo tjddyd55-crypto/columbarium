@@ -9,6 +9,26 @@ interface ApiEnvelope<T> {
   } | null;
 }
 
+function isApiEnvelope(value: unknown): value is ApiEnvelope<unknown> {
+  return !!value && typeof value === "object" && "success" in value;
+}
+
+function unwrapSuccessEnvelope<T>(value: unknown): T {
+  let current: unknown = value;
+  for (let i = 0; i < 3; i += 1) {
+    if (!isApiEnvelope(current)) break;
+    if (current.success === false) {
+      throw new ApiError(
+        current.error?.message ?? "요청 처리에 실패했습니다.",
+        200,
+        current.error?.code,
+      );
+    }
+    current = current.data;
+  }
+  return current as T;
+}
+
 export class ApiError extends Error {
   status: number;
   code?: string;
@@ -63,9 +83,9 @@ export async function requestJson<T>(
     throw new ApiError("응답을 읽을 수 없습니다.", response.status, "INVALID_RESPONSE");
   }
 
-  const isEnvelope = "success" in payload && typeof (payload as ApiEnvelope<T>).success === "boolean";
+  const isEnvelope = isApiEnvelope(payload);
   if (!isEnvelope) {
-    return payload as T;
+    return unwrapSuccessEnvelope<T>(payload);
   }
 
   const envelope = payload as ApiEnvelope<T>;
@@ -81,5 +101,5 @@ export async function requestJson<T>(
     throw new ApiError("응답 데이터가 없습니다.", response.status, "EMPTY_RESPONSE");
   }
 
-  return envelope.data;
+  return unwrapSuccessEnvelope<T>(envelope.data);
 }

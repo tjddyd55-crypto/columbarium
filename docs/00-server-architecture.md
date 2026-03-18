@@ -51,6 +51,7 @@
 
 - 로그인/회원가입/토큰 처리 **전부 NestJS**에서 수행
 - JWT 기반 인증 단일화 (core-api `AuthModule`)
+- **관리자 최초 로그인**: DB에 시드가 적용되어 있어야 함. `backend/core-api`에서 `npx prisma db seed` 실행 시 생성되는 수퍼관리자 계정 — 아이디 `superadmin`, 비밀번호 `SuperAdmin1!` (운영에서는 배포 후 비밀번호 변경 권장)
 
 ---
 

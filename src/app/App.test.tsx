@@ -6,7 +6,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 
 describe('App', () => {
-  it('로그인 페이지에 납골당 타이틀이 표시된다', () => {
+  it('로그인 페이지에 봉안당 타이틀이 표시된다', () => {
     const router = createMemoryRouter(
       [
         { path: '/admin/login', Component: Login },
@@ -15,7 +15,7 @@ describe('App', () => {
       { initialEntries: ['/admin/login'] }
     );
     render(<RouterProvider router={router} />);
-    expect(screen.getByText('납골당')).toBeInTheDocument();
+    expect(screen.getByText('봉안당')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /로그인/ })).toBeInTheDocument();
   });
 

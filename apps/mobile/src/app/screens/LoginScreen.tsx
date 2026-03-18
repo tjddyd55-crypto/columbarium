@@ -26,7 +26,7 @@ export default function LoginScreen() {
     }
     setLoading(true);
     try {
-      const res = await authApi.login({ username: username.trim(), password });
+      const res = await authApi.login({ login_id: username.trim(), password });
       setAuth(res.accessToken, res.user);
       Toast.show({ type: 'success', text1: '로그인되었습니다.' });
     } catch (e: any) {
@@ -38,7 +38,7 @@ export default function LoginScreen() {
 
   return (
     <Layout scroll padded safe>
-      <Text style={styles.title}>납골당</Text>
+      <Text style={styles.title}>봉안당</Text>
       <Text style={styles.subtitle}>분양/예약 플랫폼</Text>
       <Input label="아이디" value={username} onChangeText={setUsername} autoCapitalize="none" placeholder="아이디" />
       <Input label="비밀번호" value={password} onChangeText={setPassword} secureTextEntry placeholder="비밀번호" />

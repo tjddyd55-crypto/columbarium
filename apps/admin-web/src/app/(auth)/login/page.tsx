@@ -20,7 +20,7 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      const { token, user } = await login({ username: username.trim(), password });
+      const { token, user } = await login({ login_id: username.trim(), password });
       if (user.role !== 'SUPER_ADMIN' && user.role !== 'OPERATOR_ADMIN') {
         toast.error('관리자 계정만 접근할 수 있습니다.');
         return;
@@ -39,7 +39,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="w-full max-w-sm bg-white rounded-lg shadow p-6">
-        <h1 className="text-xl font-bold text-center mb-6">납골당 관리자</h1>
+        <h1 className="text-xl font-bold text-center mb-6">봉안당 관리자</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">아이디</label>

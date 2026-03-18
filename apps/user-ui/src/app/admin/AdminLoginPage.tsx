@@ -19,7 +19,8 @@ export function AdminLoginPage() {
       setAdminToken(token);
       navigate("/admin", { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "로그인에 실패했습니다.");
+      const msg = err instanceof Error ? err.message : typeof err === "string" ? err : "로그인에 실패했습니다.";
+      setError(msg);
     } finally {
       setSubmitting(false);
     }
@@ -29,7 +30,7 @@ export function AdminLoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#1E293B] to-[#0f172a] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-[#3B82F6] mb-2">납골당</h1>
+          <h1 className="text-4xl font-bold text-[#3B82F6] mb-2">봉안당</h1>
           <p className="text-gray-600">관리자 대시보드</p>
         </div>
 

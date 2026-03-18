@@ -3,7 +3,7 @@ import './globals.css';
 import { Providers } from './providers';
 
 export const metadata: Metadata = {
-  title: '납골당 플랫폼 관리자',
+  title: '봉안당 플랫폼 관리자',
   description: '업체/슈퍼관리자 대시보드',
 };
 

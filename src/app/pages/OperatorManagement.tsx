@@ -4,9 +4,9 @@ import StatusBadge from '../components/StatusBadge';
 import { Plus, Search, Eye, Edit, Ban } from 'lucide-react';
 
 const operators = [
-  { id: 1, name: '강남 납골당', owner: '김철수', email: 'gangnam@nakgoldang.com', phone: '010-1234-5678', facilities: 3, status: 'ACTIVE', createdAt: '2024-01-15' },
-  { id: 2, name: '서초 납골당', owner: '이영희', email: 'seocho@nakgoldang.com', phone: '010-2345-6789', facilities: 2, status: 'ACTIVE', createdAt: '2024-02-20' },
-  { id: 3, name: '역삼 납골당', owner: '박민수', email: 'yeoksam@nakgoldang.com', phone: '010-3456-7890', facilities: 1, status: 'PENDING', createdAt: '2024-03-10' },
+  { id: 1, name: '강남 봉안당', owner: '김철수', email: 'gangnam@nakgoldang.com', phone: '010-1234-5678', facilities: 3, status: 'ACTIVE', createdAt: '2024-01-15' },
+  { id: 2, name: '서초 봉안당', owner: '이영희', email: 'seocho@nakgoldang.com', phone: '010-2345-6789', facilities: 2, status: 'ACTIVE', createdAt: '2024-02-20' },
+  { id: 3, name: '역삼 봉안당', owner: '박민수', email: 'yeoksam@nakgoldang.com', phone: '010-3456-7890', facilities: 1, status: 'PENDING', createdAt: '2024-03-10' },
 ];
 
 export default function OperatorManagement() {

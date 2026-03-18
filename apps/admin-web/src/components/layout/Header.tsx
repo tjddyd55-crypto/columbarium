@@ -15,9 +15,9 @@ export function Header() {
 
   return (
     <header className="h-14 bg-white border-b flex items-center justify-between px-4">
-      <span className="text-gray-600 text-sm">납골당 플랫폼 관리자</span>
+      <span className="text-gray-600 text-sm">봉안당 플랫폼 관리자</span>
       <div className="flex items-center gap-3">
-        <span className="text-sm text-gray-700">{user?.username}</span>
+        <span className="text-sm text-gray-700">{user?.login_id}</span>
         <span className="text-xs px-2 py-0.5 rounded bg-gray-200 text-gray-600">{user?.role}</span>
         <button
           type="button"

@@ -47,7 +47,7 @@ columbarium/
 
 ### apps/user-ui (일반 사용자 웹)
 
-- **역할**: 납골당 이용자용 웹. **API 로직 없음**, fetch로 core-api만 호출.
+- **역할**: 봉안당 이용자용 웹. **API 로직 없음**, fetch로 core-api만 호출.
 - **배포**: 루트에서 `npm run build` → `dist/` (columbarium-web으로 서빙)
 - **주요 경로**:
   - `src/app/` — 라우트(`routes.tsx`), 페이지, 레이아웃, `admin/`(관리자 로그인·대시보드)

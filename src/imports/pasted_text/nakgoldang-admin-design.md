@@ -1,4 +1,4 @@
-프로젝트명: 납골당 분양 플랫폼 관리자 웹 (Admin Dashboard)
+프로젝트명: 봉안당 분양 플랫폼 관리자 웹 (Admin Dashboard)
 
 목표:
 사업자(OPERATOR_ADMIN)와 슈퍼관리자(SUPER_ADMIN)가 사용하는 관리 웹 UI를 설계한다.

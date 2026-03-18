@@ -3,12 +3,12 @@ import type { ApiResponse } from '../types/api';
 import type { AuthResult } from '../types/api';
 
 export interface LoginPayload {
-  username: string;
+  login_id: string;
   password: string;
 }
 
 export interface SignupPayload {
-  username: string;
+  login_id: string;
   password: string;
   name: string;
   birthDate: string;

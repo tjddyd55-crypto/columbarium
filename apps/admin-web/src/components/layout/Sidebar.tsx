@@ -21,7 +21,7 @@ export function Sidebar({ role }: { role: string }) {
 
   return (
     <aside className="w-56 bg-gray-900 text-gray-300 min-h-screen">
-      <div className="p-4 font-semibold text-white">납골당 관리자</div>
+      <div className="p-4 font-semibold text-white">봉안당 관리자</div>
       <nav className="px-2">
         {menus.map((m) => {
           if (m.roles && !m.roles.includes(role)) return null;
