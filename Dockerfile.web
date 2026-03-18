@@ -1,0 +1,30 @@
+# columbarium-web: user-ui 정적 빌드 + SPA 서빙 (/, /login 등 모든 경로 → index.html)
+FROM node:20-slim AS builder
+
+WORKDIR /app
+
+COPY package.json package-lock.json* pnpm-lock.yaml* ./
+COPY vite.config.ts ./
+COPY apps/user-ui ./apps/user-ui
+
+# 빌드 시 API URL 주입 (Railway Variables에서 VITE_API_BASE_URL 설정 후 빌드)
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+
+RUN npm ci 2>/dev/null || npm install
+RUN npm run build
+
+# ----------------------------
+FROM node:20-slim AS runner
+
+WORKDIR /app
+ENV NODE_ENV=production
+ENV PORT=3000
+
+RUN npm install -g serve
+
+COPY --from=builder /app/dist ./dist
+
+# SPA: 모든 경로를 index.html로 fallback (-s)
+EXPOSE 3000
+CMD ["sh", "-c", "serve dist -s -l ${PORT:-3000}"]
