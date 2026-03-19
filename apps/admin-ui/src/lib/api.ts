@@ -115,7 +115,34 @@ export const api = {
     waitlist: () => request<WaitlistRow[]>('/api/my/waitlist'),
     contracts: () => request<ContractRow[]>('/api/my/contracts'),
   },
+
+  // 시설/좌석 정책 흐름 (admin)
+  adminSite: {
+    getCompanies: () => request<CompanyRow[]>('/admin/companies'),
+    getFacilities: () => request<SiteFacilityRow[]>('/admin/facilities'),
+    getSections: (facilityId: string) => request<SectionRow[]>(`/admin/facilities/${facilityId}/sections`),
+    getSeats: (sectionId: string) => request<AdminSeatRow[]>(`/admin/sections/${sectionId}/seats`),
+    getPolicy: (facilityId: string) => request<PolicyRow | null>(`/admin/facilities/${facilityId}/policy`),
+    createCompany: (body: { name: string }) => request<CompanyRow>('/admin/company', { method: 'POST', body: JSON.stringify(body) }),
+    createFacility: (body: { name: string; address: string; companyId: number }) =>
+      request<SiteFacilityRow>('/admin/facility', { method: 'POST', body: JSON.stringify(body) }),
+    createSection: (body: { facilityId: number; name: string; rows: number; cols: number }) =>
+      request<SectionCreatedRow>('/admin/section', { method: 'POST', body: JSON.stringify(body) }),
+    updateSeatPrice: (seatId: string, price: number) =>
+      request<{ id: string; price: number }>(`/admin/seat/${seatId}`, { method: 'PATCH', body: JSON.stringify({ price }) }),
+    blockSeat: (seatId: string, isBlocked: boolean) =>
+      request<{ id: string; isBlocked: boolean }>(`/admin/seat/${seatId}/block`, { method: 'PATCH', body: JSON.stringify({ isBlocked }) }),
+    upsertPolicy: (body: { facilityId: number; maxWaiting?: number; maxYears?: number }) =>
+      request<PolicyRow>('/admin/policy', { method: 'POST', body: JSON.stringify(body) }),
+  },
 };
+
+export type CompanyRow = { id: string; name: string; createdAt: string };
+export type SiteFacilityRow = { id: string; name: string; address: string; companyId: string; companyName: string; createdAt: string };
+export type SectionRow = { id: string; facilityId: string; name: string; rows: number; cols: number; seatCount: number; createdAt: string };
+export type SectionCreatedRow = SectionRow & { seatCount: number };
+export type AdminSeatRow = { id: string; sectionId: string; row: number; col: number; price: number; isBlocked: boolean };
+export type PolicyRow = { id: string; facilityId: string; maxWaiting: number | null; maxYears: number | null };
 
 export type FacilityRow = {
   id: string;

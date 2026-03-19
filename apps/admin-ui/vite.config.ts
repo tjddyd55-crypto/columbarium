@@ -23,6 +23,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': { target: 'http://localhost:4000', changeOrigin: true },
+      '/admin': { target: 'http://localhost:4000', changeOrigin: true },
+      '/facilities': { target: 'http://localhost:4000', changeOrigin: true },
+      '/seats': { target: 'http://localhost:4000', changeOrigin: true },
     },
   },
 

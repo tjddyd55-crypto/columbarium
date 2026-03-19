@@ -27,7 +27,6 @@ export function FacilityDetailPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [waitingCount, setWaitingCount] = useState<number | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,19 +40,8 @@ export function FacilityDetailPage() {
     async function load() {
       try {
         const facilityResult = await api.getFacility(id);
-        const seats = await api.listFacilitySeats(id);
-        const statuses = await Promise.all(
-          seats.map((seat) =>
-            api
-              .getSeatStatus(seat.seat_id)
-              .then((status) => status.waitingCount)
-              .catch(() => 0),
-          ),
-        );
-
         if (!cancelled) {
           setFacility(toViewModel(facilityResult));
-          setWaitingCount(statuses.reduce((sum, count) => sum + count, 0));
         }
       } catch (err) {
         if (!cancelled) {
@@ -224,9 +212,9 @@ export function FacilityDetailPage() {
 
         {/* 상태 정보 */}
         <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6">
-          <p className="text-sm text-gray-600 mb-1">현재 상태</p>
+          <p className="text-sm text-gray-600 mb-1">좌석 현황</p>
           <p className="text-lg font-semibold text-blue-700">
-            현재 {waitingCount ?? 0}명 대기 중
+            아래 버튼에서 구역별 좌석 상태(즉시 구매/대기/불가)를 확인할 수 있습니다.
           </p>
         </div>
 
@@ -249,7 +237,7 @@ export function FacilityDetailPage() {
           onClick={() => navigate(`/facilities/${id}/seats`)}
           className="w-full h-14 bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 text-white rounded-xl text-lg font-semibold"
         >
-          지금 자리 확인하고 예약하기
+          좌석표 보기 · 즉시 구매 / 대기 등록
         </Button>
       </div>
     </div>

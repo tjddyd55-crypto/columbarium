@@ -45,7 +45,47 @@ async function main() {
     });
   }
 
+  // ----- 시설/좌석 샘플 데이터 (Company 1, Facility 1, Section 2개, SeatPolicy 1) -----
+  let company = await prisma.company.findFirst({ where: { name: '샘플 사업자' } });
+  if (!company) {
+    company = await prisma.company.create({ data: { name: '샘플 사업자' } });
+  }
+  let site = await prisma.site.findFirst({ where: { companyId: company.id, name: '샘플 강남 봉안당' } });
+  if (!site) {
+    site = await prisma.site.create({
+      data: {
+        name: '샘플 강남 봉안당',
+        address: '서울특별시 강남구 테헤란로 123',
+        companyId: company.id,
+      },
+    });
+  }
+  let sectionA = await prisma.section.findFirst({ where: { facilityId: site.id, name: 'A' } });
+  if (!sectionA) {
+    sectionA = await prisma.section.create({ data: { facilityId: site.id, name: 'A', rows: 4, cols: 6 } });
+    const seatsA: { sectionId: bigint; row: number; col: number; price: number }[] = [];
+    for (let r = 1; r <= 4; r++) for (let c = 1; c <= 6; c++) seatsA.push({ sectionId: sectionA.id, row: r, col: c, price: 25000000 });
+    await prisma.seat.createMany({ data: seatsA });
+  }
+  let sectionB = await prisma.section.findFirst({ where: { facilityId: site.id, name: 'B' } });
+  if (!sectionB) {
+    sectionB = await prisma.section.create({ data: { facilityId: site.id, name: 'B', rows: 3, cols: 5 } });
+    const seatsB: { sectionId: bigint; row: number; col: number; price: number }[] = [];
+    for (let r = 1; r <= 3; r++) for (let c = 1; c <= 5; c++) seatsB.push({ sectionId: sectionB.id, row: r, col: c, price: 25000000 });
+    await prisma.seat.createMany({ data: seatsB });
+  }
+  const sections = [sectionA, sectionB];
+  const policy = await prisma.seatPolicy.findUnique({ where: { facilityId: site.id } });
+  if (!policy) {
+    await prisma.seatPolicy.create({ data: { facilityId: site.id, maxWaiting: 3, maxYears: 30 } });
+  }
+
+  const companyCount = await prisma.company.count();
+  const facilityCount = await prisma.site.count();
+  const sectionCount = await prisma.section.count();
+  const seatCount = await prisma.seat.count();
   console.log('Seed 완료. 수퍼관리자 계정:', SUPER_ADMIN_SEED.loginId);
+  console.log('샘플 시설/좌석:', { companyCount, facilityCount, sectionCount, seatCount });
 }
 
 main()

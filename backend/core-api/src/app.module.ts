@@ -18,6 +18,7 @@ import { PaymentsModule } from './payments/payments.module';
 import { AdminModule } from './admin/admin.module';
 import { DevicesModule } from './devices/devices.module';
 import { AuditModule } from './audit/audit.module';
+import { SiteSeatsModule } from './site-seats/site-seats.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { LegacyApiModule } from './legacy-api/legacy-api.module';
 
@@ -45,6 +46,7 @@ import { LegacyApiModule } from './legacy-api/legacy-api.module';
     AdminModule,
     DevicesModule,
     AuditModule,
+    SiteSeatsModule,
     LegacyApiModule,
   ],
 })

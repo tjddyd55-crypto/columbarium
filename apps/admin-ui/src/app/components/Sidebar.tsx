@@ -10,12 +10,18 @@ import {
   Users,
   Bell,
   FileSearch,
+  Settings,
 } from "lucide-react";
 
 const menuItems = [
   { path: "/admin", label: "대시보드", icon: LayoutDashboard },
-  { path: "/admin/business", label: "사업자 관리", icon: Building2, superAdminOnly: true },
-  { path: "/admin/facility", label: "시설 관리", icon: MapPin },
+  { path: "/admin/company", label: "사업자 등록", icon: Building2, superAdminOnly: true },
+  { path: "/admin/site", label: "시설 등록", icon: MapPin, superAdminOnly: true },
+  { path: "/admin/section", label: "구역 생성", icon: Grid3x3, superAdminOnly: true },
+  { path: "/admin/seat-management", label: "좌석 관리", icon: Grid3x3, superAdminOnly: true },
+  { path: "/admin/policy", label: "정책 설정", icon: Settings, superAdminOnly: true },
+  { path: "/admin/business", label: "사업자 관리(기존)", icon: Building2 },
+  { path: "/admin/facility", label: "시설 관리(기존)", icon: MapPin },
   { path: "/admin/seat", label: "봉안함(칸) 관리", icon: Grid3x3 },
   { path: "/admin/waitlist", label: "대기열 관리", icon: ListOrdered },
   { path: "/admin/contracts", label: "계약 관리", icon: FileText },

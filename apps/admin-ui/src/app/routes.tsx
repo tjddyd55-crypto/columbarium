@@ -21,6 +21,11 @@ import ResaleManagement from "./pages/ResaleManagement";
 import MemberManagement from "./pages/MemberManagement";
 import NotificationManagement from "./pages/NotificationManagement";
 import AuditLog from "./pages/AuditLog";
+import CompanyRegisterPage from "./pages/CompanyRegisterPage";
+import SiteRegisterPage from "./pages/SiteRegisterPage";
+import SectionCreatePage from "./pages/SectionCreatePage";
+import SeatManagementPage from "./pages/SeatManagementPage";
+import PolicySettingPage from "./pages/PolicySettingPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 export const router = createBrowserRouter([
@@ -44,6 +49,11 @@ export const router = createBrowserRouter([
     Component: AdminLayout,
     children: [
       { index: true, Component: Dashboard },
+      { path: "company", Component: CompanyRegisterPage },
+      { path: "site", Component: SiteRegisterPage },
+      { path: "section", Component: SectionCreatePage },
+      { path: "seat-management", Component: SeatManagementPage },
+      { path: "policy", Component: PolicySettingPage },
       { path: "business", Component: OperatorManagement },
       { path: "facility", Component: FacilityManagement },
       { path: "seat", Component: UnitManagement },

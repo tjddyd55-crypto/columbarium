@@ -19,6 +19,10 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": "http://localhost:4000",
+      "/facilities": "http://localhost:4000",
+      "/seats": "http://localhost:4000",
+      "/payments": "http://localhost:4000",
+      "/reservations": "http://localhost:4000",
       "/users": "http://localhost:4000",
       "/queue": "http://localhost:4000",
       "/contracts": "http://localhost:4000",

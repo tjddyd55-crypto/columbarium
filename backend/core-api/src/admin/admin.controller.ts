@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Query, Param, UseGuards } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AuditLogService } from '../audit/audit-log.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -46,5 +46,60 @@ export class AdminController {
       limit: limit ? parseInt(limit, 10) : undefined,
       offset: offset ? parseInt(offset, 10) : undefined,
     });
+  }
+
+  @Get('companies')
+  async getCompanies() {
+    return this.adminService.getCompanies();
+  }
+
+  @Get('facilities')
+  async getFacilities() {
+    return this.adminService.getFacilities();
+  }
+
+  @Get('facilities/:id/sections')
+  async getSections(@Param('id') id: string) {
+    return this.adminService.getSectionsByFacility(BigInt(id));
+  }
+
+  @Get('sections/:id/seats')
+  async getSeats(@Param('id') id: string) {
+    return this.adminService.getSeatsBySection(BigInt(id));
+  }
+
+  @Get('facilities/:id/policy')
+  async getPolicy(@Param('id') id: string) {
+    return this.adminService.getPolicyByFacility(BigInt(id));
+  }
+
+  @Post('company')
+  async createCompany(@Body() body: { name: string }) {
+    return this.adminService.createCompany(body);
+  }
+
+  @Post('facility')
+  async createFacility(@Body() body: { name: string; address: string; companyId: number }) {
+    return this.adminService.createFacility(body);
+  }
+
+  @Post('section')
+  async createSection(@Body() body: { facilityId: number; name: string; rows: number; cols: number }) {
+    return this.adminService.createSection(body);
+  }
+
+  @Patch('seat/:id')
+  async updateSeatPrice(@Param('id') id: string, @Body() body: { price: number }) {
+    return this.adminService.updateSeatPrice(BigInt(id), body.price);
+  }
+
+  @Patch('seat/:id/block')
+  async blockSeat(@Param('id') id: string, @Body() body: { isBlocked: boolean }) {
+    return this.adminService.setSeatBlocked(BigInt(id), body.isBlocked);
+  }
+
+  @Post('policy')
+  async createPolicy(@Body() body: { facilityId: number; maxWaiting?: number; maxYears?: number }) {
+    return this.adminService.upsertPolicy(body);
   }
 }

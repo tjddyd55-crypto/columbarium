@@ -21,21 +21,33 @@ export interface FacilitySummary {
   id: string;
   name: string;
   address: string | null;
-  price_from: number | null;
-  image_url: string | null;
+  price_from?: number | null;
+  image_url?: string | null;
+  companyName?: string;
 }
 
 export interface FacilityDetail {
   id: string;
   name: string;
   address: string | null;
-  price_from: number | null;
-  image_url: string | null;
+  price_from?: number | null;
+  image_url?: string | null;
+  sectionCount?: number;
 }
 
 export interface SeatSummary {
   seat_id: string;
   code: string;
+}
+
+/** 시설 좌석 API 응답 (정책 기반 상태) */
+export interface SeatWithStatus {
+  id: number;
+  row: number;
+  col: number;
+  price: number;
+  status: "GREEN" | "YELLOW" | "RED";
+  waitingCount: number;
 }
 
 export interface SeatStatus {
@@ -106,15 +118,31 @@ export const api = {
   },
 
   listFacilities() {
-    return requestJson<FacilitySummary[]>("/api/facilities");
+    return requestJson<FacilitySummary[]>("/facilities");
   },
 
   getFacility(id: string) {
-    return requestJson<FacilityDetail>(`/api/facilities/${id}`);
+    return requestJson<FacilityDetail>(`/facilities/${id}`);
   },
 
   listFacilitySeats(id: string) {
-    return requestJson<SeatSummary[]>(`/api/facilities/${id}/seats`);
+    return requestJson<SeatWithStatus[]>(`/facilities/${id}/seats`);
+  },
+
+  reserveSeat(seatId: string) {
+    return requestJson<{ id: string; seatId: string; status: string; createdAt: string }>(
+      `/seats/${seatId}/reserve`,
+      { method: "POST" },
+      true,
+    );
+  },
+
+  waitSeat(seatId: string) {
+    return requestJson<{ id: string; seatId: string; status: string; createdAt: string }>(
+      `/seats/${seatId}/wait`,
+      { method: "POST" },
+      true,
+    );
   },
 
   getSeatStatus(seatId: string) {
