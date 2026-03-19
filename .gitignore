@@ -13,3 +13,6 @@ Thumbs.db
 .idea/
 .vscode/
 .nyc_output/
+
+# 개인 계정 메모 (저장소에 포함하지 않음)
+*계정*.txt
