@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { Lock } from 'lucide-react';
-import { api, setAuthStorage, getStoredToken } from '../../lib/api';
+import { api, setAuthStorage, getStoredToken, getStoredUser, clearAuthStorage } from '../../lib/api';
+import { canAccessAdminPortal } from '../../lib/adminPortalAccess';
 
 const ADMIN_TOKEN_KEY = 'admin_token';
 
@@ -20,6 +21,15 @@ export default function ChangePasswordPage() {
     const t = getStoredToken();
     if (!t) {
       navigate(isAdminFlow ? '/admin/login' : '/login', { replace: true });
+      return;
+    }
+    if (isAdminFlow) {
+      const u = getStoredUser();
+      if (!canAccessAdminPortal(u)) {
+        clearAuthStorage();
+        localStorage.removeItem(ADMIN_TOKEN_KEY);
+        navigate('/admin/login', { replace: true });
+      }
     }
   }, [isAdminFlow, navigate]);
 

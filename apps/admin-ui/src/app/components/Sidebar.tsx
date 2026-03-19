@@ -14,6 +14,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { getStoredUser } from "../../lib/api";
+import { hasAnyOperatorRole } from "../../lib/adminPortalAccess";
 
 type MenuItem = {
   path: string;
@@ -52,6 +53,9 @@ export default function Sidebar() {
   const isSuperAdmin = role === "SUPER_ADMIN" || role === "ADMIN";
   const isOperator = role === "OPERATOR" || role === "OPERATOR_ADMIN";
   const isAgent = role === "AGENT" || role === "SALES_MANAGER";
+  const operatorCompanyId = user?.companyId;
+  const showOperatorCompanyPortal =
+    hasAnyOperatorRole(user) && Boolean(operatorCompanyId);
 
   const visible = menuItems.filter((item) => {
     if (isAgent) {
@@ -72,6 +76,19 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 overflow-y-auto py-4">
+        {showOperatorCompanyPortal && operatorCompanyId && (
+          <Link
+            to={`/admin/companies/${operatorCompanyId}`}
+            className={`flex items-center gap-3 px-6 py-3 transition-colors ${
+              location.pathname.startsWith(`/admin/companies/${operatorCompanyId}`)
+                ? "bg-[#3B82F6] text-white"
+                : "text-slate-300 hover:bg-slate-700"
+            }`}
+          >
+            <Building2 className="w-5 h-5" />
+            <span>사업자 상세</span>
+          </Link>
+        )}
         {visible.map((item) => {
           const isActive =
             location.pathname === item.path ||

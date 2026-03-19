@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Lock, User } from 'lucide-react';
 import { api, setAuthStorage } from '../../lib/api';
+import { canAccessAdminPortal } from '../../lib/adminPortalAccess';
 
 const ADMIN_TOKEN_KEY = 'admin_token';
 
@@ -17,20 +18,12 @@ export default function Login() {
     setError('');
     setSubmitting(true);
     try {
-      const res = await api.auth.login({ login_id: loginId.trim(), password });
+      const res = await api.auth.adminLogin({ login_id: loginId.trim(), password });
       const token = res.accessToken ?? res.token;
       const user = res.user;
       if (!token || !user) throw new Error('Invalid login response');
-      const allowed = new Set([
-        'SUPER_ADMIN',
-        'ADMIN',
-        'OPERATOR_ADMIN',
-        'OPERATOR',
-        'AGENT',
-        'SALES_MANAGER',
-      ]);
-      if (!allowed.has(user.role)) {
-        setError('관리자·운영자·에이전트 계정만 접근할 수 있습니다.');
+      if (!canAccessAdminPortal(user)) {
+        setError('관리자 또는 소속 사업자가 있는 운영자만 접근할 수 있습니다.');
         return;
       }
       setAuthStorage(token, user);

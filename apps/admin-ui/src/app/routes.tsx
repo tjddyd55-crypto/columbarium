@@ -29,6 +29,7 @@ import PolicySettingPage from "./pages/PolicySettingPage";
 import AgentOnboardPage from "./pages/AgentOnboardPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
+import CompanyDetailPage from "./pages/CompanyDetailPage";
 
 export const router = createBrowserRouter([
   {
@@ -67,6 +68,7 @@ export const router = createBrowserRouter([
       { path: "member", Component: MemberManagement },
       { path: "notification", Component: NotificationManagement },
       { path: "audit", Component: AuditLog },
+      { path: "companies/:companyId", Component: CompanyDetailPage },
     ],
   },
   {

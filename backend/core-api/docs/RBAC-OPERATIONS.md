@@ -142,6 +142,14 @@
 
 ---
 
+## 관리자 웹 콘솔 로그인 (`ADMIN` / `SUPER_ADMIN` 전용)
+
+- **엔드포인트:** `POST /api/auth/admin-login` (body: `login_id`, `password` — 일반 `POST /api/auth/login` 과 동일)
+- **동작:** 자격 증명 검증 후, 역할 목록에 `ADMIN` 또는 `SUPER_ADMIN` 이 없으면 **403** `관리자만 접근 가능`. 토큰은 발급하지 않음.
+- **프론트:** 관리자 로그인 화면은 위 API만 사용. `/admin/*` 레이아웃에서 `canAccessAdminPortal` 로 재검증 후 비관리자는 `/admin/login` 으로 리다이렉트.
+
+---
+
 ## 부록: 초기 비밀번호 · 강제 변경 (`mustChangePassword`)
 
 | 항목 | 설명 |

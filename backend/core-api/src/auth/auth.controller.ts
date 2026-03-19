@@ -23,6 +23,12 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
+  @Public()
+  @Post('admin-login')
+  async adminLogin(@Body() dto: LoginDto) {
+    return this.authService.loginForAdminPanel(dto);
+  }
+
   @AllowPendingPasswordChange()
   @Post('change-password')
   async changePassword(

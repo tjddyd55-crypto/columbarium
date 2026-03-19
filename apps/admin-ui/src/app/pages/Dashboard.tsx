@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router';
 import { Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import KPICard from '../components/KPICard';
+import DataTable from '../components/DataTable';
+import StatusBadge from '../components/StatusBadge';
 import { Building2, ListOrdered, FileText, Wallet, Users, Store } from 'lucide-react';
-import { api, type DashboardSummary, getStoredUser } from '../../lib/api';
+import { api, type CompanyRow, type DashboardSummary, getStoredUser } from '../../lib/api';
 
 export default function Dashboard() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
@@ -12,6 +15,7 @@ export default function Dashboard() {
   const [contractCount, setContractCount] = useState<number>(0);
   const [pieData, setPieData] = useState<{ name: string; value: number; color: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [companies, setCompanies] = useState<CompanyRow[]>([]);
 
   const user = getStoredUser();
   const isLegacyAdmin =
@@ -69,6 +73,51 @@ export default function Dashboard() {
     };
   }, [isLegacyAdmin]);
 
+  useEffect(() => {
+    if (!isLegacyAdmin) return;
+    let cancelled = false;
+    api.adminSite
+      .getCompanies()
+      .then((list) => {
+        if (!cancelled) setCompanies(list);
+      })
+      .catch(() => {
+        if (!cancelled) setCompanies([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isLegacyAdmin]);
+
+  const companyListColumns = useMemo(
+    () => [
+      {
+        key: 'name',
+        label: '사업자명',
+        sortable: true,
+        render: (v: string, row: CompanyRow) => (
+          <Link to={`/admin/companies/${row.id}`} className="font-medium text-blue-600 hover:underline">
+            {v}
+          </Link>
+        ),
+      },
+      { key: 'businessNo', label: '사업자번호', sortable: true, render: (v: string | null | undefined) => v ?? '—' },
+      {
+        key: 'status',
+        label: '상태',
+        sortable: true,
+        render: (v: string | undefined) => (v ? <StatusBadge status={v} /> : '—'),
+      },
+      {
+        key: 'createdAt',
+        label: '생성일',
+        sortable: true,
+        render: (v: string) => v.slice(0, 10),
+      },
+    ],
+    [],
+  );
+
   if (loading) return <p className="text-gray-500">로딩 중...</p>;
 
   return (
@@ -80,20 +129,29 @@ export default function Dashboard() {
       )}
 
       {summary?.view === 'ADMIN' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <KPICard title="사업자(Company)" value={String(summary.companyCount)} icon={Store} />
-          <KPICard title="시설(Site)" value={String(summary.siteCount)} icon={Building2} />
-          <KPICard
-            title="확정 예약"
-            value={String(summary.confirmedReservationCount)}
-            icon={ListOrdered}
-          />
-          <KPICard
-            title="대기 중 커미션 건"
-            value={String(summary.pendingCommissionCount)}
-            icon={Wallet}
-          />
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <KPICard title="사업자(Company)" value={String(summary.companyCount)} icon={Store} />
+            <KPICard title="시설(Site)" value={String(summary.siteCount)} icon={Building2} />
+            <KPICard
+              title="확정 예약"
+              value={String(summary.confirmedReservationCount)}
+              icon={ListOrdered}
+            />
+            <KPICard
+              title="대기 중 커미션 건"
+              value={String(summary.pendingCommissionCount)}
+              icon={Wallet}
+            />
+          </div>
+          {companies.length > 0 && (
+            <div className="bg-white rounded-lg border border-[#E5E7EB] p-4">
+              <h3 className="text-lg font-semibold text-[#1E293B] mb-1">사업자 목록</h3>
+              <p className="text-sm text-gray-600 mb-4">사업자명을 클릭하면 해당 사업자 상세 콘솔로 이동합니다.</p>
+              <DataTable columns={companyListColumns} data={companies} />
+            </div>
+          )}
+        </>
       )}
 
       {summary?.view === 'OPERATOR' && (

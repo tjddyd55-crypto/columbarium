@@ -30,6 +30,11 @@ enum RoleCode {
   AGENT
 }
 
+enum CompanyStatus {
+  ACTIVE
+  INACTIVE
+}
+
 enum CommissionStatus {
   PENDING
   PAID
@@ -537,9 +542,11 @@ model AuditLog {
 //////////////////////////
 
 model Company {
-  id        BigInt   @id @default(autoincrement())
+  id        BigInt        @id @default(autoincrement())
   name      String
-  createdAt DateTime @default(now())
+  businessNo String?      @unique
+  status    CompanyStatus @default(ACTIVE)
+  createdAt DateTime      @default(now())
   sites     Site[]
   users     User[]
   agents    Agent[]

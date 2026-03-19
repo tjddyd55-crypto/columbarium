@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   ConflictException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
@@ -56,7 +57,33 @@ export class AuthService {
     return this.issueTokens(user);
   }
 
+  /** 일반 로그인 (USER/AGENT/OPERATOR 등 모든 활성 계정) */
   async login(dto: LoginDto) {
+    const user = await this.verifyLocalCredentials(dto);
+    return this.completeLoginSession(user);
+  }
+
+  /**
+   * 관리자 콘솔 전용 로그인
+   * - ADMIN / SUPER_ADMIN: 전체
+   * - OPERATOR / OPERATOR_ADMIN: 소속 companyId 가 있을 때만 (본인 사업자 포털)
+   */
+  async loginForAdminPanel(dto: LoginDto) {
+    const user = await this.verifyLocalCredentials(dto);
+    const roleCodes = user.roles.map((r) => String(r.role.code));
+    const isPlatformAdmin = roleCodes.includes('ADMIN') || roleCodes.includes('SUPER_ADMIN');
+    const isOperatorConsole =
+      roleCodes.includes('OPERATOR') || roleCodes.includes('OPERATOR_ADMIN');
+    if (!isPlatformAdmin && !isOperatorConsole) {
+      throw new ForbiddenException('관리자 콘솔에 로그인할 수 없는 역할입니다.');
+    }
+    if (isOperatorConsole && user.companyId == null) {
+      throw new ForbiddenException('소속 사업자가 없는 운영자는 관리자 콘솔에 접근할 수 없습니다.');
+    }
+    return this.completeLoginSession(user);
+  }
+
+  private async verifyLocalCredentials(dto: LoginDto) {
     const user = await this.prisma.user.findUnique({
       where: { loginId: dto.loginId },
       include: { roles: { include: { role: true } }, operatorAdmins: { take: 1 } },
@@ -65,12 +92,23 @@ export class AuthService {
     const ok = await bcrypt.compare(dto.password, user.passwordHash);
     if (!ok) throw new UnauthorizedException('아이디 또는 비밀번호를 확인하세요.');
     if (user.status !== UserStatus.ACTIVE) throw new UnauthorizedException('비활성화된 계정입니다.');
+    return user;
+  }
 
+  private async completeLoginSession(user: {
+    id: bigint;
+    loginId: string;
+    name: string;
+    email?: string | null;
+    companyId?: bigint | null;
+    mustChangePassword: boolean;
+    roles: { role: { code: string } }[];
+    operatorAdmins?: { operatorId: bigint }[];
+  }) {
     await this.prisma.user.update({
       where: { id: user.id },
       data: { lastLoginAt: new Date() },
     });
-
     return this.issueTokens(user);
   }
 

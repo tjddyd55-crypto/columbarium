@@ -3,7 +3,12 @@ import { Outlet, useNavigate } from 'react-router';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import { getStoredUser, clearAuthStorage } from '../../lib/api';
+import { canAccessAdminPortal } from '../../lib/adminPortalAccess';
 
+/**
+ * 관리자 콘솔 레이아웃 + RoleGuard: ADMIN/SUPER_ADMIN 만 /admin/* 하위 라우트 접근.
+ * (토큰 없음·역할 불일치 시 /admin/login 으로 replace)
+ */
 export default function AdminLayout() {
   const navigate = useNavigate();
 
@@ -18,10 +23,10 @@ export default function AdminLayout() {
       navigate('/admin/change-password', { replace: true });
       return;
     }
-    if (user?.role !== 'ADMIN') {
+    if (!canAccessAdminPortal(user)) {
       clearAuthStorage();
       localStorage.removeItem('admin_token');
-      navigate('/admin/login');
+      navigate('/admin/login', { replace: true });
     }
   }, [navigate]);
 

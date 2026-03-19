@@ -124,6 +124,20 @@ export class LegacyApiController {
     return this.authEnvelopeFromResult(result);
   }
 
+  /** 관리자 웹 콘솔 전용 — ADMIN/SUPER_ADMIN 만 토큰 발급 */
+  @Public()
+  @Post('auth/admin-login')
+  async adminLogin(@Body() body: { login_id?: string; password?: string }) {
+    if (!body.login_id || !body.password) {
+      throw new BadRequestException('login_id and password are required');
+    }
+    const result = await this.authService.loginForAdminPanel({
+      loginId: body.login_id.trim(),
+      password: body.password,
+    });
+    return this.authEnvelopeFromResult(result);
+  }
+
   @AllowPendingPasswordChange()
   @Post('auth/change-password')
   async changePassword(

@@ -12,9 +12,11 @@ interface DataTableProps {
   data: any[];
   pageSize?: number;
   onRowClick?: (row: any) => void;
+  /** 행별 추가 class (선택 강조 등) — 기존 스타일 유지 */
+  rowClassName?: (row: any, rowIndex: number) => string | undefined;
 }
 
-export default function DataTable({ columns, data, pageSize, onRowClick }: DataTableProps) {
+export default function DataTable({ columns, data, pageSize, onRowClick, rowClassName }: DataTableProps) {
   const displayData = pageSize ? data.slice(0, pageSize) : data;
 
   return (
@@ -38,7 +40,12 @@ export default function DataTable({ columns, data, pageSize, onRowClick }: DataT
               <tr
                 key={rowIndex}
                 onClick={() => onRowClick?.(row)}
-                className={onRowClick ? 'hover:bg-gray-50 cursor-pointer' : ''}
+                className={[
+                  onRowClick ? 'hover:bg-gray-50 cursor-pointer' : '',
+                  rowClassName?.(row, rowIndex) ?? '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
               >
                 {columns.map((column) => (
                   <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

@@ -98,6 +98,9 @@ export const api = {
     }) => request<AuthResponse>('/api/auth/signup', { method: 'POST', body: JSON.stringify(body) }),
     login: (body: { login_id: string; password: string }) =>
       request<AuthResponse>('/api/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+    /** ADMIN/SUPER_ADMIN 전용 — 그 외 역할은 403 */
+    adminLogin: (body: { login_id: string; password: string }) =>
+      request<AuthResponse>('/api/auth/admin-login', { method: 'POST', body: JSON.stringify(body) }),
     changePassword: (body: { current_password: string; new_password: string }) =>
       request<AuthResponse>('/api/auth/change-password', { method: 'POST', body: JSON.stringify(body) }),
   },
@@ -158,6 +161,31 @@ export const api = {
   dashboard: {
     summary: () => request<DashboardSummary>('/dashboard/summary'),
   },
+  /** 사업자(Company) 단위 포털 — 응답은 항상 해당 companyId 로 스코프됨 */
+  companyPortal: {
+    detail: (companyId: string) => request<CompanyPortalDetail>(`/admin/companies/${companyId}`),
+    facilities: (companyId: string) =>
+      request<SiteFacilityRow[]>(`/admin/companies/${companyId}/facilities`),
+    createFacility: (
+      companyId: string,
+      body: {
+        name: string;
+        address: string;
+        floors?: { name: string; rows: number; cols: number }[];
+      },
+    ) =>
+      request<SiteFacilityRow>(`/admin/companies/${companyId}/facilities`, {
+        method: 'POST',
+        body: JSON.stringify(body),
+      }),
+    reservations: (companyId: string, status?: string) => {
+      const q = status ? `?status=${encodeURIComponent(status)}` : '';
+      return request<CompanyPortalReservationRow[]>(`/admin/companies/${companyId}/reservations${q}`);
+    },
+    resales: (companyId: string) =>
+      request<CompanyPortalResaleRow[]>(`/admin/companies/${companyId}/resales`),
+    agents: (companyId: string) => request<AgentRow[]>(`/admin/companies/${companyId}/agents`),
+  },
   agents: {
     list: () => request<AgentRow[]>('/admin/agents'),
     create: (body: { userId: string; companyId: string; name: string; commissionRate: number; code?: string }) =>
@@ -212,11 +240,82 @@ export const api = {
   },
 };
 
-export type CompanyRow = { id: string; name: string; createdAt: string };
-export type SiteFacilityRow = { id: string; name: string; address: string; companyId: string; companyName: string; createdAt: string };
+export type CompanyRow = {
+  id: string;
+  name: string;
+  businessNo?: string | null;
+  status?: string;
+  createdAt: string;
+};
+
+export type CompanyPortalDetail = {
+  id: string;
+  name: string;
+  businessNo: string | null;
+  status: string;
+  createdAt: string;
+};
+
+export type CompanyPortalReservationRow = {
+  id: string;
+  status: string;
+  seatId: string;
+  facilityId: string;
+  facilityName: string;
+  sectionName: string;
+  row: number;
+  col: number;
+  displayCode: string;
+  price: number;
+  queueOrder: number | null;
+  createdAt: string;
+  userName: string;
+  userLoginId: string;
+  userPhone: string;
+};
+
+export type CompanyPortalResaleRow = {
+  id: string;
+  reservationId: string;
+  status: string;
+  pricingType: string;
+  price: number | null;
+  createdAt: string;
+  facilityName: string;
+  displayCode: string;
+};
+export type SiteFacilityRow = {
+  id: string;
+  name: string;
+  address: string;
+  companyId: string;
+  companyName: string;
+  createdAt: string;
+  /** 구역(Section) 개수 — 시설 목록 표시용 */
+  sectionCount?: number;
+};
 export type SectionRow = { id: string; facilityId: string; name: string; rows: number; cols: number; seatCount: number; createdAt: string };
 export type SectionCreatedRow = SectionRow & { seatCount: number };
-export type AdminSeatRow = { id: string; sectionId: string; row: number; col: number; price: number; isBlocked: boolean };
+/** 관리자 좌석 그리드 색상 (백엔드 getSeatsBySection — status === uiStatus) */
+export type AdminSeatUiStatus = 'AVAILABLE' | 'WAITING' | 'BLOCKED' | 'SOLD';
+
+export type AdminSeatRow = {
+  id: string;
+  sectionId: string;
+  row: number;
+  col: number;
+  price: number;
+  isBlocked: boolean;
+  /** 표시 코드 (예: 1열 → 101) */
+  displayCode: string;
+  /** API 명세용 코드 (없으면 displayCode 와 동일) */
+  code?: string;
+  /** 그리드 범례·색상과 동일한 통합 상태 (없으면 uiStatus) */
+  status?: AdminSeatUiStatus;
+  uiStatus: AdminSeatUiStatus;
+  reservationStatus: string | null;
+  reservationId: string | null;
+};
 export type PolicyRow = { id: string; facilityId: string; maxWaiting: number | null; maxYears: number | null };
 
 export type CompanyOperatorOnboarded = {

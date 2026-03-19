@@ -1,187 +1,345 @@
-import { useEffect, useState } from 'react';
-import { type SiteFacilityRow, type SectionRow, type AdminSeatRow } from '../../lib/api';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router';
+import {
+  type SiteFacilityRow,
+  type SectionRow,
+  type AdminSeatRow,
+  type CompanyRow,
+  api,
+} from '../../lib/api';
 import { facilityAdminApi } from '../../lib/facilityAdminApi';
 import { isCompanyScopedOperator } from '../../lib/operatorScope';
+import { inferLineLabel, listUniqueFloors, sectionsForFloor } from '../../lib/sectionFloorGrouping';
+import {
+  resolveSeatCode,
+  resolveSeatGridStatus,
+  SEAT_GRID_CELL_CLASS,
+  SEAT_GRID_LEGEND,
+  SEAT_GRID_LEGEND_SWATCH,
+} from '../../lib/seatGridDisplay';
+import SeatDetailModal from '../components/SeatDetailModal';
 
 export default function SeatManagementPage() {
   const scoped = isCompanyScopedOperator();
-  const [facilities, setFacilities] = useState<SiteFacilityRow[]>([]);
-  const [sections, setSections] = useState<SectionRow[]>([]);
-  const [seats, setSeats] = useState<AdminSeatRow[]>([]);
+  const [searchParams] = useSearchParams();
+  const lockCompanyId = scoped ? '' : (searchParams.get('companyId')?.trim() ?? '');
+  const lockFacilityId = searchParams.get('facilityId')?.trim() ?? '';
+  const companyLockedByUrl = Boolean(lockCompanyId);
+
+  const [companies, setCompanies] = useState<CompanyRow[]>([]);
+  const [companyId, setCompanyId] = useState('');
+  const [allFacilities, setAllFacilities] = useState<SiteFacilityRow[]>([]);
   const [facilityId, setFacilityId] = useState('');
+  const [sections, setSections] = useState<SectionRow[]>([]);
+  const [floor, setFloor] = useState('');
   const [sectionId, setSectionId] = useState('');
-  const [editingPrice, setEditingPrice] = useState<{ seatId: string; value: string } | null>(null);
+  const [seats, setSeats] = useState<AdminSeatRow[]>([]);
+  const [modalSeat, setModalSeat] = useState<AdminSeatRow | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
   useEffect(() => {
-    facilityAdminApi.getFacilities(scoped).then(setFacilities).catch(() => setFacilities([]));
+    if (scoped || companyLockedByUrl) return;
+    api.adminSite
+      .getCompanies()
+      .then(setCompanies)
+      .catch(() => setCompanies([]));
+  }, [scoped, companyLockedByUrl]);
+
+  useEffect(() => {
+    if (companyLockedByUrl) {
+      setCompanyId(lockCompanyId);
+      return;
+    }
+    if (scoped || companies.length !== 1) return;
+    setCompanyId((c) => c || companies[0].id);
+  }, [scoped, companies, companyLockedByUrl, lockCompanyId]);
+
+  useEffect(() => {
+    if (!companyLockedByUrl) return;
+    if (!lockFacilityId) setFacilityId('');
+  }, [companyLockedByUrl, lockCompanyId, lockFacilityId]);
+
+  useEffect(() => {
+    facilityAdminApi.getFacilities(scoped).then(setAllFacilities).catch(() => setAllFacilities([]));
   }, [scoped]);
+
+  const facilities = useMemo(() => {
+    if (scoped) return allFacilities;
+    if (!companyId) return [];
+    return allFacilities.filter((f) => f.companyId === companyId);
+  }, [allFacilities, companyId, scoped]);
+
+  useEffect(() => {
+    if (!lockFacilityId || facilities.length === 0) return;
+    if (facilities.some((f) => f.id === lockFacilityId)) {
+      setFacilityId(lockFacilityId);
+    }
+  }, [lockFacilityId, facilities]);
 
   useEffect(() => {
     if (!facilityId) {
       setSections([]);
+      setFloor('');
       setSectionId('');
       setSeats([]);
       return;
     }
-    facilityAdminApi.getSections(scoped, facilityId).then(setSections).catch(() => setSections([]));
+    setLoading(true);
+    facilityAdminApi
+      .getSections(scoped, facilityId)
+      .then(setSections)
+      .catch(() => setSections([]))
+      .finally(() => setLoading(false));
+    setFloor('');
     setSectionId('');
     setSeats([]);
   }, [facilityId, scoped]);
 
+  const floors = useMemo(() => listUniqueFloors(sections), [sections]);
+
   useEffect(() => {
+    if (sections.length === 0) {
+      setFloor('');
+      setSectionId('');
+      return;
+    }
+    setFloor((prev) => (prev && floors.includes(prev) ? prev : floors[0] ?? ''));
+  }, [sections, floors]);
+
+  const sectionsInFloor = useMemo(
+    () => (floor ? sectionsForFloor(sections, floor) : []),
+    [sections, floor],
+  );
+
+  useEffect(() => {
+    if (sectionsInFloor.length === 0) {
+      setSectionId('');
+      setSeats([]);
+      return;
+    }
+    setSectionId((prev) =>
+      prev && sectionsInFloor.some((s) => s.id === prev) ? prev : sectionsInFloor[0].id,
+    );
+  }, [sectionsInFloor]);
+
+  const refreshSeats = useCallback(async () => {
     if (!sectionId) {
       setSeats([]);
       return;
     }
-    facilityAdminApi.getSeats(scoped, sectionId).then(setSeats).catch(() => setSeats([]));
+    setLoading(true);
+    try {
+      const list = await facilityAdminApi.getSeats(scoped, sectionId);
+      setSeats(list);
+    } catch {
+      setSeats([]);
+    } finally {
+      setLoading(false);
+    }
   }, [sectionId, scoped]);
 
-  const handleSavePrice = async (seatId: string, price: number) => {
-    if (Number.isNaN(price) || price < 0) return;
-    setLoading(true);
-    setMessage(null);
-    try {
-      await facilityAdminApi.updateSeatPrice(scoped, seatId, price);
-      setMessage({ type: 'ok', text: '가격이 저장되었습니다.' });
-      setEditingPrice(null);
-      if (sectionId) facilityAdminApi.getSeats(scoped, sectionId).then(setSeats);
-    } catch (err) {
-      setMessage({ type: 'err', text: err instanceof Error ? err.message : '저장에 실패했습니다.' });
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    void refreshSeats();
+  }, [refreshSeats]);
 
-  const handleBlock = async (seatId: string, isBlocked: boolean) => {
-    setLoading(true);
-    setMessage(null);
-    try {
-      await facilityAdminApi.blockSeat(scoped, seatId, isBlocked);
-      setMessage({ type: 'ok', text: isBlocked ? '좌석을 차단했습니다.' : '좌석 차단을 해제했습니다.' });
-      if (sectionId) facilityAdminApi.getSeats(scoped, sectionId).then(setSeats);
-    } catch (err) {
-      setMessage({ type: 'err', text: err instanceof Error ? err.message : '처리에 실패했습니다.' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const rows = seats.length ? Math.max(...seats.map((s) => s.row)) : 0;
-  const cols = seats.length ? Math.max(...seats.map((s) => s.col)) : 0;
-  const byPos = new Map(seats.map((s) => [`${s.row}-${s.col}`, s]));
+  const selectedSectionMeta = sectionsInFloor.find((s) => s.id === sectionId);
+  const gridRows = selectedSectionMeta?.rows ?? 0;
+  const gridCols = selectedSectionMeta?.cols ?? 0;
+  const byPos = useMemo(() => new Map(seats.map((s) => [`${s.row}-${s.col}`, s])), [seats]);
 
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-[#1E293B]">좌석 관리</h3>
-        <p className="text-sm text-gray-600">구역을 선택한 뒤 좌석별 가격 수정·차단/해제를 할 수 있습니다.</p>
+        <h3 className="text-lg font-semibold text-[#1E293B]">봉안함 관리 (그리드)</h3>
+        <p className="text-sm text-gray-600">
+          목록이 아니라 <strong>행·열 그리드</strong>로 표시됩니다. 필터로 시설·층·구역을 고른 뒤 칸을 클릭하면 모달에서
+          가격·차단(상태)을 수정할 수 있습니다.
+        </p>
       </div>
 
-      <div className="flex flex-wrap gap-4 items-end">
+      <div className="bg-white rounded-lg border border-[#E5E7EB] p-4">
+        <p className="text-sm font-semibold text-[#1E293B] mb-3">상단 필터</p>
+        <div className="flex flex-wrap gap-4 items-end">
+        {!scoped && !companyLockedByUrl && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">사업자 (Company)</label>
+            <select
+              value={companyId}
+              onChange={(e) => {
+                setCompanyId(e.target.value);
+                setFacilityId('');
+              }}
+              className="border border-gray-300 rounded-lg px-3 py-2 min-w-[220px]"
+            >
+              <option value="">선택</option>
+              {companies.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">시설</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">시설 (Facility)</label>
           <select
             value={facilityId}
             onChange={(e) => setFacilityId(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 min-w-[200px]"
+            disabled={!scoped && !companyId && !companyLockedByUrl}
+            className="border border-gray-300 rounded-lg px-3 py-2 min-w-[240px] disabled:opacity-50"
           >
-            <option value="">선택</option>
+            <option value="">
+              {scoped ? '선택' : companyId || companyLockedByUrl ? '선택' : '사업자를 먼저 선택'}
+            </option>
             {facilities.map((f) => (
-              <option key={f.id} value={f.id}>{f.name}</option>
+              <option key={f.id} value={f.id}>
+                {f.name}
+              </option>
             ))}
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">구역</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">층</label>
           <select
-            value={sectionId}
-            onChange={(e) => setSectionId(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 min-w-[120px]"
+            value={floor}
+            onChange={(e) => setFloor(e.target.value)}
+            disabled={!facilityId || floors.length === 0}
+            className="border border-gray-300 rounded-lg px-3 py-2 min-w-[140px] disabled:opacity-50"
           >
-            <option value="">선택</option>
-            {sections.map((s) => (
-              <option key={s.id} value={s.id}>{s.name} ({s.seatCount}석)</option>
+            {floors.map((fl) => (
+              <option key={fl} value={fl}>
+                {fl}
+              </option>
             ))}
           </select>
         </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">구역 (라인)</label>
+          <select
+            value={sectionId}
+            onChange={(e) => setSectionId(e.target.value)}
+            disabled={sectionsInFloor.length === 0}
+            className="border border-gray-300 rounded-lg px-3 py-2 min-w-[200px] disabled:opacity-50"
+          >
+            {sectionsInFloor.map((s) => (
+              <option key={s.id} value={s.id}>
+                {inferLineLabel(s.name)} ({s.seatCount}석)
+              </option>
+            ))}
+          </select>
+        </div>
+        </div>
       </div>
 
+      <p className="text-xs text-gray-500">
+        구역명이 <code className="bg-gray-100 px-1 rounded">1층 A</code> 형태면 층/라인으로 나뉩니다. 단일 이름(
+        <code className="bg-gray-100 px-1">A</code>)이면 층은 &quot;전체&quot;로 묶입니다.
+      </p>
+
       {message && (
-        <p className={message.type === 'ok' ? 'text-sm text-green-600' : 'text-sm text-red-600'}>{message.text}</p>
+        <p className={message.type === 'ok' ? 'text-sm text-green-600' : 'text-sm text-red-600'}>
+          {message.text}
+        </p>
       )}
 
-      {sectionId && (
-        <div className="bg-white rounded-lg p-4 border border-[#E5E7EB]">
-          <p className="text-sm text-gray-600 mb-3">전면</p>
-          <div className="overflow-x-auto">
-            <div className="inline-block space-y-1">
-              {Array.from({ length: rows }, (_, r) => r + 1).map((row) => (
-                <div key={row} className="flex items-center gap-1">
-                  <span className="w-6 text-center text-sm text-gray-500">{row}</span>
-                  {Array.from({ length: cols }, (_, c) => c + 1).map((col) => {
+      <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-gray-600 items-center">
+        <span className="font-medium text-gray-700">범례 (status):</span>
+        {SEAT_GRID_LEGEND.map(({ status, label }) => (
+          <span key={status} className="inline-flex items-center gap-1.5">
+            <span className={`w-4 h-4 rounded shrink-0 ${SEAT_GRID_LEGEND_SWATCH[status]}`} />
+            {label}
+          </span>
+        ))}
+        {loading && <span className="text-gray-400">불러오는 중…</span>}
+      </div>
+
+      {sectionId && gridRows > 0 && gridCols > 0 && (
+        <div className="bg-white rounded-xl p-4 border border-[#E5E7EB] overflow-x-auto">
+          <p className="text-sm text-gray-500 mb-3 text-center">
+            구역 그리드 (행 {gridRows} × 열 {gridCols}) · 전면 (앞쪽)
+          </p>
+          <div className="inline-flex flex-col gap-1.5 min-w-min">
+            <div className="flex items-stretch gap-1.5">
+              <span className="w-8 shrink-0" aria-hidden />
+              <div
+                className="grid gap-1.5"
+                style={{
+                  gridTemplateColumns: `repeat(${gridCols}, minmax(3rem, 3.25rem))`,
+                }}
+              >
+                {Array.from({ length: gridCols }, (_, c) => c + 1).map((col) => (
+                  <div
+                    key={`col-head-${col}`}
+                    className="h-6 flex items-end justify-center text-[11px] font-semibold text-gray-500 pb-0.5"
+                  >
+                    {col}
+                  </div>
+                ))}
+              </div>
+            </div>
+            {Array.from({ length: gridRows }, (_, r) => r + 1).map((row) => (
+              <div key={row} className="flex items-stretch gap-1.5">
+                <span className="w-8 shrink-0 flex items-center justify-end text-sm text-gray-500 pr-1">
+                  {row}
+                </span>
+                <div
+                  className="grid gap-1.5"
+                  style={{
+                    gridTemplateColumns: `repeat(${gridCols}, minmax(3rem, 3.25rem))`,
+                  }}
+                >
+                  {Array.from({ length: gridCols }, (_, c) => c + 1).map((col) => {
                     const seat = byPos.get(`${row}-${col}`);
-                    if (!seat) return <div key={`${row}-${col}`} className="w-14 h-10" />;
-                    const isEditing = editingPrice?.seatId === seat.id;
+                    if (!seat) {
+                      return (
+                        <div
+                          key={`${row}-${col}`}
+                          className="h-12 rounded-md border border-dashed border-gray-200 bg-gray-50/80"
+                          title="좌석 없음"
+                        />
+                      );
+                    }
+                    const gridStatus = resolveSeatGridStatus(seat);
+                    const code = resolveSeatCode(seat);
                     return (
-                      <div
+                      <button
                         key={seat.id}
-                        className={`w-14 h-10 rounded flex flex-col items-center justify-center text-xs border ${
-                          seat.isBlocked ? 'bg-red-200 border-red-400' : 'bg-gray-100 border-gray-300'
-                        }`}
+                        type="button"
+                        onClick={() => {
+                          setMessage(null);
+                          setModalSeat(seat);
+                        }}
+                        className={`h-12 rounded-md border text-xs font-semibold flex flex-col items-center justify-center leading-tight ${SEAT_GRID_CELL_CLASS[gridStatus]}`}
+                        title={`${code} · status=${gridStatus} · ${seat.price.toLocaleString()}원`}
                       >
-                        {isEditing ? (
-                          <input
-                            type="number"
-                            value={editingPrice.value}
-                            onChange={(e) => setEditingPrice({ seatId: seat.id, value: e.target.value })}
-                            onBlur={() => {
-                              const v = parseInt(editingPrice.value, 10);
-                              if (!Number.isNaN(v)) handleSavePrice(seat.id, v);
-                              setEditingPrice(null);
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                const v = parseInt(editingPrice.value, 10);
-                                if (!Number.isNaN(v)) handleSavePrice(seat.id, v);
-                                setEditingPrice(null);
-                              }
-                            }}
-                            className="w-12 text-center py-0.5"
-                            autoFocus
-                          />
-                        ) : (
-                          <>
-                            <span className="font-medium">{seat.row}-{seat.col}</span>
-                            <span className="text-gray-600">{seat.price > 0 ? `${(seat.price / 10000).toFixed(0)}만` : '-'}</span>
-                          </>
-                        )}
-                        <div className="flex gap-0.5 mt-0.5">
-                          <button
-                            type="button"
-                            onClick={() => setEditingPrice({ seatId: seat.id, value: String(seat.price) })}
-                            className="text-[10px] px-1 text-blue-600"
-                          >
-                            가격
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleBlock(seat.id, !seat.isBlocked)}
-                            className="text-[10px] px-1 text-red-600"
-                          >
-                            {seat.isBlocked ? '해제' : '차단'}
-                          </button>
-                        </div>
-                      </div>
+                        <span>{code}</span>
+                        <span className="text-[10px] font-normal opacity-90">
+                          {seat.price > 0 ? `${Math.round(seat.price / 10000)}만` : '-'}
+                        </span>
+                      </button>
                     );
                   })}
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
+
+      {sectionId && (gridRows === 0 || gridCols === 0) && !loading && (
+        <p className="text-sm text-amber-700">선택한 구역의 행/열 정보가 없습니다.</p>
+      )}
+
+      <SeatDetailModal
+        seat={modalSeat}
+        scoped={scoped}
+        onClose={() => setModalSeat(null)}
+        onAfterMutation={async () => {
+          setMessage({ type: 'ok', text: '반영되었습니다.' });
+          await refreshSeats();
+        }}
+      />
     </div>
   );
 }

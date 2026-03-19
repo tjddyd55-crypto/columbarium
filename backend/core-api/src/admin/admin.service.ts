@@ -1,9 +1,16 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditLogService } from '../audit/audit-log.service';
 import { BusinessError, ErrorCode } from '../common/errors/business.error';
-import { UserStatus } from '@prisma/client';
+import { ReservationStatus, UserStatus } from '@prisma/client';
+
+/** JWT 사용자 (사업자 포털 접근 제어) */
+export type CompanyPortalUser = {
+  role: string;
+  roles?: string[];
+  companyId?: string;
+};
 
 @Injectable()
 export class AdminService {
@@ -86,7 +93,183 @@ export class AdminService {
 
   async getCompanies() {
     const list = await this.prisma.company.findMany({ orderBy: { name: 'asc' } });
-    return list.map((c) => ({ id: String(c.id), name: c.name, createdAt: c.createdAt.toISOString() }));
+    return list.map((c) => ({
+      id: String(c.id),
+      name: c.name,
+      businessNo: c.businessNo,
+      status: c.status,
+      createdAt: c.createdAt.toISOString(),
+    }));
+  }
+
+  assertPortalCompanyAccess(user: CompanyPortalUser, companyId: bigint): void {
+    const roleList = user.roles?.length ? user.roles : user.role ? [user.role] : [];
+    if (roleList.includes('SUPER_ADMIN') || roleList.includes('ADMIN')) {
+      return;
+    }
+    if (roleList.includes('OPERATOR') || roleList.includes('OPERATOR_ADMIN')) {
+      if (!user.companyId || BigInt(user.companyId) !== companyId) {
+        throw new ForbiddenException('해당 사업자에 접근할 권한이 없습니다.');
+      }
+      return;
+    }
+    throw new ForbiddenException('접근할 수 없습니다.');
+  }
+
+  async getCompanyPortalDetail(companyId: bigint, user: CompanyPortalUser) {
+    this.assertPortalCompanyAccess(user, companyId);
+    const c = await this.prisma.company.findUnique({ where: { id: companyId } });
+    if (!c) {
+      throw new BusinessError(ErrorCode.NOT_FOUND, '사업자를 찾을 수 없습니다.', 404);
+    }
+    return {
+      id: String(c.id),
+      name: c.name,
+      businessNo: c.businessNo,
+      status: c.status,
+      createdAt: c.createdAt.toISOString(),
+    };
+  }
+
+  async getCompanyPortalFacilities(companyId: bigint, user: CompanyPortalUser) {
+    this.assertPortalCompanyAccess(user, companyId);
+    return this.getFacilitiesForCompany(companyId);
+  }
+
+  /**
+   * 사업자 포털: 시설(Site) 생성. 선택적으로 층별 구역(Section)+좌석을 한 번에 생성.
+   */
+  async createCompanyPortalFacility(
+    companyId: bigint,
+    user: CompanyPortalUser,
+    body: { name: string; address: string; floors?: { name: string; rows: number; cols: number }[] },
+  ) {
+    this.assertPortalCompanyAccess(user, companyId);
+    const name = body.name?.trim();
+    const address = body.address?.trim();
+    if (!name) {
+      throw new BadRequestException('시설 이름을 입력하세요.');
+    }
+    if (!address) {
+      throw new BadRequestException('주소를 입력하세요.');
+    }
+    const site = await this.prisma.site.create({
+      data: { name, address, companyId },
+    });
+    await this.auditLog.log({
+      action: 'FACILITY_CREATED',
+      entityType: 'SITE',
+      entityId: String(site.id),
+      afterData: { id: String(site.id), name: site.name, companyId: String(companyId) },
+    });
+    const floors = body.floors ?? [];
+    const facilityIdNum = Number(site.id);
+    for (const f of floors) {
+      const sectionName = f.name?.trim();
+      if (!sectionName) continue;
+      const rows = Math.min(200, Math.max(1, Math.floor(Number(f.rows)) || 1));
+      const cols = Math.min(200, Math.max(1, Math.floor(Number(f.cols)) || 1));
+      await this.createSection({ facilityId: facilityIdNum, name: sectionName, rows, cols });
+    }
+    const withCompany = await this.prisma.site.findUniqueOrThrow({
+      where: { id: site.id },
+      include: { company: true, _count: { select: { sections: true } } },
+    });
+    return {
+      id: String(withCompany.id),
+      name: withCompany.name,
+      address: withCompany.address,
+      companyId: String(withCompany.companyId),
+      companyName: withCompany.company.name,
+      createdAt: withCompany.createdAt.toISOString(),
+      sectionCount: withCompany._count.sections,
+    };
+  }
+
+  async listCompanyPortalReservations(companyId: bigint, user: CompanyPortalUser, statusQuery?: string) {
+    this.assertPortalCompanyAccess(user, companyId);
+    const allowed = new Set(Object.values(ReservationStatus));
+    const status =
+      statusQuery && allowed.has(statusQuery as ReservationStatus)
+        ? (statusQuery as ReservationStatus)
+        : undefined;
+    const rows = await this.prisma.reservation.findMany({
+      where: {
+        ...(status ? { status } : {}),
+        seat: { section: { site: { companyId } } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 400,
+      include: {
+        seat: { include: { section: { include: { site: true } } } },
+        user: { select: { id: true, name: true, loginId: true, phone: true } },
+      },
+    });
+    return rows.map((r) => ({
+      id: String(r.id),
+      status: r.status,
+      seatId: String(r.seatId),
+      facilityId: String(r.seat.section.site.id),
+      facilityName: r.seat.section.site.name,
+      sectionName: r.seat.section.name,
+      row: r.seat.row,
+      col: r.seat.col,
+      displayCode: `${r.seat.row}${String(r.seat.col).padStart(2, '0')}`,
+      price: r.price,
+      queueOrder: r.queueOrder,
+      createdAt: r.createdAt.toISOString(),
+      userName: r.user.name,
+      userLoginId: r.user.loginId,
+      userPhone: r.user.phone,
+    }));
+  }
+
+  async listCompanyPortalResales(companyId: bigint, user: CompanyPortalUser) {
+    this.assertPortalCompanyAccess(user, companyId);
+    const rows = await this.prisma.seatResaleListing.findMany({
+      where: {
+        reservation: {
+          seat: { section: { site: { companyId } } },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 300,
+      include: {
+        reservation: {
+          include: { seat: { include: { section: { include: { site: true } } } } },
+        },
+      },
+    });
+    return rows.map((l) => ({
+      id: String(l.id),
+      reservationId: String(l.reservationId),
+      status: l.status,
+      pricingType: l.pricingType,
+      price: l.price,
+      createdAt: l.createdAt.toISOString(),
+      facilityName: l.reservation.seat.section.site.name,
+      displayCode: `${l.reservation.seat.row}${String(l.reservation.seat.col).padStart(2, '0')}`,
+    }));
+  }
+
+  async listCompanyPortalAgents(companyId: bigint, user: CompanyPortalUser) {
+    this.assertPortalCompanyAccess(user, companyId);
+    const rows = await this.prisma.agent.findMany({
+      where: { companyId },
+      orderBy: { createdAt: 'desc' },
+      include: { user: { select: { loginId: true } }, company: { select: { name: true } } },
+    });
+    return rows.map((a) => ({
+      id: String(a.id),
+      userId: String(a.userId),
+      loginId: a.user.loginId,
+      companyId: String(a.companyId),
+      companyName: a.company.name,
+      code: a.code,
+      name: a.name,
+      commissionRate: a.commissionRate,
+      createdAt: a.createdAt.toISOString(),
+    }));
   }
 
   async getFacilities() {
@@ -109,7 +292,7 @@ export class AdminService {
     const list = await this.prisma.site.findMany({
       where: { companyId },
       orderBy: { createdAt: 'desc' },
-      include: { company: true },
+      include: { company: true, _count: { select: { sections: true } } },
     });
     return list.map((s) => ({
       id: String(s.id),
@@ -118,6 +301,7 @@ export class AdminService {
       companyId: String(s.companyId),
       companyName: s.company.name,
       createdAt: s.createdAt.toISOString(),
+      sectionCount: s._count.sections,
     }));
   }
 
@@ -142,15 +326,88 @@ export class AdminService {
     const list = await this.prisma.seat.findMany({
       where: { sectionId },
       orderBy: [{ row: 'asc' }, { col: 'asc' }],
+      include: {
+        reservations: {
+          where: { status: { not: ReservationStatus.CANCELLED } },
+          select: { id: true, status: true, expiresAt: true },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
     });
-    return list.map((s) => ({
-      id: String(s.id),
-      sectionId: String(s.sectionId),
-      row: s.row,
-      col: s.col,
-      price: s.price,
-      isBlocked: s.isBlocked,
-    }));
+    return list.map((s) => {
+      const derived = this.deriveSeatUiFields({
+        isBlocked: s.isBlocked,
+        reservations: s.reservations,
+      });
+      const code = `${s.row}${String(s.col).padStart(2, '0')}`;
+      return {
+        id: String(s.id),
+        sectionId: String(s.sectionId),
+        row: s.row,
+        col: s.col,
+        price: s.price,
+        isBlocked: s.isBlocked,
+        displayCode: code,
+        /** 관리 UI·연동용 코드 (displayCode 와 동일) */
+        code,
+        /** 그리드 색상 기준 통합 상태 — uiStatus 와 동일 */
+        status: derived.uiStatus,
+        ...derived,
+      };
+    });
+  }
+
+  /**
+   * 관리자 그리드 색상용 상태 (예약·차단 반영)
+   * - BLOCKED: 좌석 차단
+   * - SOLD: CONFIRMED 예약
+   * - WAITING: WAITING 또는 유효한 RESERVED(미만료)
+   * - AVAILABLE: 그 외
+   */
+  private deriveSeatUiFields(input: {
+    isBlocked: boolean;
+    reservations: { id: bigint; status: ReservationStatus; expiresAt: Date | null }[];
+  }): {
+    uiStatus: 'AVAILABLE' | 'WAITING' | 'BLOCKED' | 'SOLD';
+    reservationStatus: string | null;
+    reservationId: string | null;
+  } {
+    if (input.isBlocked) {
+      return { uiStatus: 'BLOCKED', reservationStatus: null, reservationId: null };
+    }
+    const now = Date.now();
+    const active = input.reservations.filter((r) => {
+      if (r.status === ReservationStatus.CANCELLED) return false;
+      if (r.status === ReservationStatus.RESERVED && r.expiresAt != null && r.expiresAt.getTime() < now) {
+        return false;
+      }
+      return true;
+    });
+    const confirmed = active.find((r) => r.status === ReservationStatus.CONFIRMED);
+    if (confirmed) {
+      return {
+        uiStatus: 'SOLD',
+        reservationStatus: confirmed.status,
+        reservationId: String(confirmed.id),
+      };
+    }
+    const waiting = active.find((r) => r.status === ReservationStatus.WAITING);
+    if (waiting) {
+      return {
+        uiStatus: 'WAITING',
+        reservationStatus: waiting.status,
+        reservationId: String(waiting.id),
+      };
+    }
+    const reserved = active.find((r) => r.status === ReservationStatus.RESERVED);
+    if (reserved) {
+      return {
+        uiStatus: 'WAITING',
+        reservationStatus: reserved.status,
+        reservationId: String(reserved.id),
+      };
+    }
+    return { uiStatus: 'AVAILABLE', reservationStatus: null, reservationId: null };
   }
 
   async getPolicyByFacility(facilityId: bigint) {
