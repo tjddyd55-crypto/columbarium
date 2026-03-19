@@ -19,8 +19,14 @@ export default function UserLoginPage() {
     setSubmitting(true);
     try {
       const res = await api.auth.login({ login_id: login_id.trim(), password });
-      setAuthStorage(res.token, res.user);
-      navigate('/');
+      const token = res.accessToken ?? res.token;
+      if (!token || !res.user) throw new Error('로그인 응답이 올바르지 않습니다.');
+      setAuthStorage(token, res.user);
+      if (res.user.mustChangePassword === true) {
+        navigate('/change-password', { replace: true });
+      } else {
+        navigate('/');
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : '로그인에 실패했습니다.');
     } finally {

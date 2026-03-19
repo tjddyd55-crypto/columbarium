@@ -25,6 +25,15 @@ enum RoleCode {
   OPERATOR_ADMIN
   SALES_MANAGER
   USER
+  ADMIN
+  OPERATOR
+  AGENT
+}
+
+enum CommissionStatus {
+  PENDING
+  PAID
+  CANCELLED
 }
 
 enum UnitStatus {
@@ -140,6 +149,8 @@ model User {
   status            UserStatus @default(ACTIVE)
   isPhoneVerified   Boolean  @default(false)
   lastLoginAt       DateTime?
+  companyId         BigInt?  // OPERATOR 등 사업자 소속
+  mustChangePassword Boolean  @default(true) // 온보딩·임시 비밀번호: 변경 전 true
 
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -156,6 +167,8 @@ model User {
   seatReservations  Reservation[]
   seatResaleListingsAsSeller SeatResaleListing[]
   seatResalePurchases       SeatResaleTransaction[]
+  company           Company? @relation(fields: [companyId], references: [id])
+  agentProfile      Agent?
 }
 
 model OperatorAdmin {
@@ -528,6 +541,24 @@ model Company {
   name      String
   createdAt DateTime @default(now())
   sites     Site[]
+  users     User[]
+  agents    Agent[]
+}
+
+/// 중간판매자(에이전트): 코드로 예약 연결, 커미션 정산
+model Agent {
+  id               BigInt   @id @default(autoincrement())
+  userId           BigInt   @unique
+  companyId        BigInt
+  code             String   @unique
+  name             String
+  commissionRate   Int      // 퍼센트 (예: 5 = 5%)
+  createdAt        DateTime @default(now())
+
+  user             User     @relation(fields: [userId], references: [id])
+  company          Company  @relation(fields: [companyId], references: [id])
+  reservations     Reservation[]
+  commissions      Commission[]
 }
 
 model Site {
@@ -568,6 +599,7 @@ model Reservation {
   id         BigInt           @id @default(autoincrement())
   userId     BigInt
   seatId     BigInt
+  agentId    BigInt?          // agentCode로 연결된 중간판매자
   status     ReservationStatus
   queueOrder Int?             // WAITING일 때만 사용, 동일 seatId 내 순번
   price      Int              @default(0)  // 예약/확정 시점 금액 (reserve 시 Seat.price 고정)
@@ -575,11 +607,29 @@ model Reservation {
   createdAt  DateTime        @default(now())
   user       User            @relation(fields: [userId], references: [id])
   seat       Seat            @relation(fields: [seatId], references: [id])
+  agent      Agent?          @relation(fields: [agentId], references: [id])
   seatResaleListing    SeatResaleListing?
   seatResaleTransaction SeatResaleTransaction?
+  commission Commission?
 
   @@index([seatId, status])
   @@index([seatId, status, queueOrder])
+  @@index([agentId])
+}
+
+model Commission {
+  id            BigInt           @id @default(autoincrement())
+  reservationId BigInt           @unique
+  agentId       BigInt
+  amount        Int
+  status        CommissionStatus @default(PENDING)
+  createdAt     DateTime         @default(now())
+
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  agent         Agent       @relation(fields: [agentId], references: [id])
+
+  @@index([agentId])
+  @@index([status])
 }
 
 model SeatPolicy {

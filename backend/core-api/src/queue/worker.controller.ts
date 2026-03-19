@@ -11,7 +11,7 @@ import { RolesGuard } from '../common/guards/roles.guard';
  */
 @Controller('queue/worker')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('SUPER_ADMIN', 'OPERATOR_ADMIN')
+@Roles('SUPER_ADMIN', 'ADMIN', 'OPERATOR_ADMIN')
 export class QueueWorkerController {
   constructor(private readonly queueService: QueueService) {}
 

@@ -13,6 +13,7 @@ import { ContractStatus, ContractType, QueueStatus } from '@prisma/client';
 import { AuthService } from '../auth/auth.service';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
+import { AllowPendingPasswordChange } from '../common/decorators/allow-pending-password-change.decorator';
 import { FacilityService } from '../facilities/facility.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UnitService } from '../units/unit.service';
@@ -26,18 +27,39 @@ export class LegacyApiController {
     private readonly unitService: UnitService,
   ) {}
 
-  /** 인증 응답 포맷: { success, data: { accessToken, user: { id, email, role } } } (login_id, name은 호환용) */
-  private authEnvelope(accessToken: string, user: { id: string; loginId: string; name?: string; email?: string | null; role: string }) {
+  /**
+   * 레거시 /api/auth/* 응답 (이중 success 래핑은 ResponseInterceptor와 호환)
+   * login_id, mustChangePassword, roles 유지
+   */
+  private authEnvelopeFromResult(result: {
+    accessToken: string;
+    user: {
+      id: string;
+      loginId: string;
+      name: string;
+      email: string;
+      role: string;
+      roles: string[];
+      mustChangePassword: boolean;
+      companyId?: string;
+      operatorId?: string;
+    };
+  }) {
+    const u = result.user;
     return {
       success: true as const,
       data: {
-        accessToken,
+        accessToken: result.accessToken,
         user: {
-          id: user.id,
-          email: user.email ?? user.loginId,
-          role: user.role,
-          login_id: user.loginId,
-          name: user.name ?? user.loginId,
+          id: u.id,
+          email: u.email,
+          role: u.role,
+          roles: u.roles,
+          login_id: u.loginId,
+          name: u.name,
+          mustChangePassword: u.mustChangePassword,
+          ...(u.companyId != null && { companyId: u.companyId }),
+          ...(u.operatorId != null && { operatorId: u.operatorId }),
         },
       },
     };
@@ -69,19 +91,7 @@ export class LegacyApiController {
       email: body.email?.trim(),
       addressRoad: body.address?.trim(),
     });
-    const user = await this.prisma.user.findFirst({
-      where: { id: BigInt(result.user.id) },
-      select: { id: true, loginId: true, name: true, email: true, roles: { include: { role: true } } },
-    });
-    if (!user) throw new NotFoundException('user not found');
-    const roleCode = user.roles[0]?.role?.code ?? 'USER';
-    return this.authEnvelope(result.accessToken, {
-      id: String(user.id),
-      loginId: user.loginId,
-      name: user.name,
-      email: user.email,
-      role: roleCode,
-    });
+    return this.authEnvelopeFromResult(result);
   }
 
   @Public()
@@ -111,23 +121,39 @@ export class LegacyApiController {
       loginId: body.login_id.trim(),
       password: body.password,
     });
-    const user = await this.prisma.user.findFirst({
-      where: { id: BigInt(result.user.id) },
-      select: { id: true, loginId: true, name: true, email: true, roles: { include: { role: true } } },
-    });
-    if (!user) throw new NotFoundException('user not found');
-    const roleCode = user.roles[0]?.role?.code ?? 'USER';
-    return this.authEnvelope(result.accessToken, {
-      id: String(user.id),
-      loginId: user.loginId,
-      name: user.name,
-      email: user.email,
-      role: roleCode,
-    });
+    return this.authEnvelopeFromResult(result);
   }
 
+  @AllowPendingPasswordChange()
+  @Post('auth/change-password')
+  async changePassword(
+    @CurrentUser() current: { id: string },
+    @Body() body: { current_password?: string; new_password?: string },
+  ) {
+    if (!body.current_password || !body.new_password) {
+      throw new BadRequestException('current_password and new_password are required');
+    }
+    const result = await this.authService.changePassword(
+      BigInt(current.id),
+      body.current_password,
+      body.new_password,
+    );
+    return this.authEnvelopeFromResult(result);
+  }
+
+  @AllowPendingPasswordChange()
   @Get('auth/me')
-  async me(@CurrentUser() currentUser: { id: string; loginId: string; email?: string; role: string }) {
+  async me(
+    @CurrentUser()
+    currentUser: {
+      id: string;
+      loginId: string;
+      email?: string;
+      role: string;
+      roles?: string[];
+      mustChangePassword?: boolean;
+    },
+  ) {
     return {
       success: true as const,
       data: {
@@ -136,6 +162,8 @@ export class LegacyApiController {
           login_id: currentUser.loginId,
           email: currentUser.email ?? currentUser.loginId,
           role: currentUser.role,
+          roles: currentUser.roles ?? [],
+          mustChangePassword: currentUser.mustChangePassword ?? false,
         },
       },
     };

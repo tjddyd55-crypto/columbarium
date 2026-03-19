@@ -7,7 +7,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('operator')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('SUPER_ADMIN', 'OPERATOR_ADMIN')
+@Roles('SUPER_ADMIN', 'ADMIN', 'OPERATOR_ADMIN')
 export class OperatorController {
   constructor(private readonly operatorService: OperatorService) {}
 

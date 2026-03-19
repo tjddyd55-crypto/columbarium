@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
-import { api, type SiteFacilityRow, type PolicyRow } from '../../lib/api';
+import { type SiteFacilityRow, type PolicyRow } from '../../lib/api';
+import { facilityAdminApi } from '../../lib/facilityAdminApi';
+import { isCompanyScopedOperator } from '../../lib/operatorScope';
 
 export default function PolicySettingPage() {
+  const scoped = isCompanyScopedOperator();
   const [facilities, setFacilities] = useState<SiteFacilityRow[]>([]);
   const [facilityId, setFacilityId] = useState('');
   const [policy, setPolicy] = useState<PolicyRow | null>(null);
@@ -11,8 +14,8 @@ export default function PolicySettingPage() {
   const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
   useEffect(() => {
-    api.adminSite.getFacilities().then(setFacilities).catch(() => setFacilities([]));
-  }, []);
+    facilityAdminApi.getFacilities(scoped).then(setFacilities).catch(() => setFacilities([]));
+  }, [scoped]);
 
   useEffect(() => {
     if (!facilityId) {
@@ -21,7 +24,7 @@ export default function PolicySettingPage() {
       setMaxYears('');
       return;
     }
-    api.adminSite.getPolicy(facilityId).then((p) => {
+    facilityAdminApi.getPolicy(scoped, facilityId).then((p) => {
       setPolicy(p ?? null);
       setMaxWaiting(p?.maxWaiting != null ? String(p.maxWaiting) : '');
       setMaxYears(p?.maxYears != null ? String(p.maxYears) : '');
@@ -30,7 +33,7 @@ export default function PolicySettingPage() {
       setMaxWaiting('');
       setMaxYears('');
     });
-  }, [facilityId]);
+  }, [facilityId, scoped]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,13 +44,13 @@ export default function PolicySettingPage() {
     setLoading(true);
     setMessage(null);
     try {
-      await api.adminSite.upsertPolicy({
+      await facilityAdminApi.upsertPolicy(scoped, {
         facilityId: Number(facilityId),
         maxWaiting: maxWaiting.trim() ? parseInt(maxWaiting, 10) : undefined,
         maxYears: maxYears.trim() ? parseInt(maxYears, 10) : undefined,
       });
       setMessage({ type: 'ok', text: '정책이 저장되었습니다.' });
-      if (facilityId) api.adminSite.getPolicy(facilityId).then((p) => setPolicy(p ?? null));
+      if (facilityId) facilityAdminApi.getPolicy(scoped, facilityId).then((p) => setPolicy(p ?? null));
     } catch (err) {
       setMessage({ type: 'err', text: err instanceof Error ? err.message : '저장에 실패했습니다.' });
     } finally {

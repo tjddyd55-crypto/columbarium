@@ -4,6 +4,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BusinessError, ErrorCode } from '../common/errors/business.error';
 import { PricingType, ResaleStatus } from '@prisma/client';
 
+/**
+ * 재판매(SeatResale)와 AGENT 정책 (초기):
+ * - 재판매 거래에는 새로운 agentCode를 적용하지 않는다.
+ * - Reservation.agentId·Commission은 최초 판매(좌석 예약 시 agentCode) 시점만 인정한다.
+ * - buyListing 시 소유권만 이전하며, 에이전트 커미션 재발생·재배분 로직은 두지 않는다.
+ * - 향후 “재판매 수수료/신규 소개” 등이 필요하면 별도 모델·정책 플래그로 확장할 것.
+ */
+
 /** 재판매 가격 상한 배수 (originalPrice * 이 값). 시설 설정으로 대체 가능 */
 const RESALE_MAX_PRICE_MULTIPLE = 2;
 /** 재판매 등록 가능일: 예약 확정일로부터 이 값(일) 이후만 등록 가능 */

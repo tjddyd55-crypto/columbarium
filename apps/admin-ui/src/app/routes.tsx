@@ -26,7 +26,9 @@ import SiteRegisterPage from "./pages/SiteRegisterPage";
 import SectionCreatePage from "./pages/SectionCreatePage";
 import SeatManagementPage from "./pages/SeatManagementPage";
 import PolicySettingPage from "./pages/PolicySettingPage";
+import AgentOnboardPage from "./pages/AgentOnboardPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import ChangePasswordPage from "./pages/ChangePasswordPage";
 
 export const router = createBrowserRouter([
   {
@@ -40,6 +42,7 @@ export const router = createBrowserRouter([
       { path: "waitlist/:seatId", Component: WaitlistPage },
       { path: "contract/:seatId", Component: ContractPage },
       { path: "login", Component: UserLoginPage },
+      { path: "change-password", Component: ChangePasswordPage },
       { path: "signup", Component: SignupPage },
       { path: "mypage", Component: MyPage },
     ],
@@ -50,6 +53,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, Component: Dashboard },
       { path: "company", Component: CompanyRegisterPage },
+      { path: "agent-onboard", Component: AgentOnboardPage },
       { path: "site", Component: SiteRegisterPage },
       { path: "section", Component: SectionCreatePage },
       { path: "seat-management", Component: SeatManagementPage },
@@ -68,6 +72,10 @@ export const router = createBrowserRouter([
   {
     path: "/admin/login",
     Component: Login,
+  },
+  {
+    path: "/admin/change-password",
+    Component: ChangePasswordPage,
   },
   {
     path: "*",

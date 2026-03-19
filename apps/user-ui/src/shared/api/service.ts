@@ -129,10 +129,20 @@ export const api = {
     return requestJson<SeatWithStatus[]>(`/facilities/${id}/seats`);
   },
 
-  reserveSeat(seatId: string) {
-    return requestJson<{ id: string; seatId: string; status: string; createdAt: string }>(
+  reserveSeat(seatId: string, agentCode?: string) {
+    return requestJson<{
+      id: string;
+      seatId: string;
+      status: string;
+      price: number;
+      agentId?: string | null;
+      createdAt: string;
+    }>(
       `/seats/${seatId}/reserve`,
-      { method: "POST" },
+      {
+        method: "POST",
+        body: JSON.stringify(agentCode?.trim() ? { agentCode: agentCode.trim() } : {}),
+      },
       true,
     );
   },

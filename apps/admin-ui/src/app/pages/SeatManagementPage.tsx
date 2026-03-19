@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
-import { api, type SiteFacilityRow, type SectionRow, type AdminSeatRow } from '../../lib/api';
+import { type SiteFacilityRow, type SectionRow, type AdminSeatRow } from '../../lib/api';
+import { facilityAdminApi } from '../../lib/facilityAdminApi';
+import { isCompanyScopedOperator } from '../../lib/operatorScope';
 
 export default function SeatManagementPage() {
+  const scoped = isCompanyScopedOperator();
   const [facilities, setFacilities] = useState<SiteFacilityRow[]>([]);
   const [sections, setSections] = useState<SectionRow[]>([]);
   const [seats, setSeats] = useState<AdminSeatRow[]>([]);
@@ -12,8 +15,8 @@ export default function SeatManagementPage() {
   const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
   useEffect(() => {
-    api.adminSite.getFacilities().then(setFacilities).catch(() => setFacilities([]));
-  }, []);
+    facilityAdminApi.getFacilities(scoped).then(setFacilities).catch(() => setFacilities([]));
+  }, [scoped]);
 
   useEffect(() => {
     if (!facilityId) {
@@ -22,28 +25,28 @@ export default function SeatManagementPage() {
       setSeats([]);
       return;
     }
-    api.adminSite.getSections(facilityId).then(setSections).catch(() => setSections([]));
+    facilityAdminApi.getSections(scoped, facilityId).then(setSections).catch(() => setSections([]));
     setSectionId('');
     setSeats([]);
-  }, [facilityId]);
+  }, [facilityId, scoped]);
 
   useEffect(() => {
     if (!sectionId) {
       setSeats([]);
       return;
     }
-    api.adminSite.getSeats(sectionId).then(setSeats).catch(() => setSeats([]));
-  }, [sectionId]);
+    facilityAdminApi.getSeats(scoped, sectionId).then(setSeats).catch(() => setSeats([]));
+  }, [sectionId, scoped]);
 
   const handleSavePrice = async (seatId: string, price: number) => {
     if (Number.isNaN(price) || price < 0) return;
     setLoading(true);
     setMessage(null);
     try {
-      await api.adminSite.updateSeatPrice(seatId, price);
+      await facilityAdminApi.updateSeatPrice(scoped, seatId, price);
       setMessage({ type: 'ok', text: '가격이 저장되었습니다.' });
       setEditingPrice(null);
-      if (sectionId) api.adminSite.getSeats(sectionId).then(setSeats);
+      if (sectionId) facilityAdminApi.getSeats(scoped, sectionId).then(setSeats);
     } catch (err) {
       setMessage({ type: 'err', text: err instanceof Error ? err.message : '저장에 실패했습니다.' });
     } finally {
@@ -55,9 +58,9 @@ export default function SeatManagementPage() {
     setLoading(true);
     setMessage(null);
     try {
-      await api.adminSite.blockSeat(seatId, isBlocked);
+      await facilityAdminApi.blockSeat(scoped, seatId, isBlocked);
       setMessage({ type: 'ok', text: isBlocked ? '좌석을 차단했습니다.' : '좌석 차단을 해제했습니다.' });
-      if (sectionId) api.adminSite.getSeats(sectionId).then(setSeats);
+      if (sectionId) facilityAdminApi.getSeats(scoped, sectionId).then(setSeats);
     } catch (err) {
       setMessage({ type: 'err', text: err instanceof Error ? err.message : '처리에 실패했습니다.' });
     } finally {

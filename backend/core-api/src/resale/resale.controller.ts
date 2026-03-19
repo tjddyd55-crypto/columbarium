@@ -33,7 +33,7 @@ export class ResaleController {
 
   @Post(':id/approve')
   @UseGuards(RolesGuard)
-  @Roles('SUPER_ADMIN', 'OPERATOR_ADMIN')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'OPERATOR_ADMIN')
   async approve(@CurrentUser() user: { id: string }, @Param('id') id: string, @Body() body: { operatorId: string }) {
     const operatorId = body.operatorId ?? user.id;
     return this.resaleService.approveResale(operatorId, id);
@@ -41,7 +41,7 @@ export class ResaleController {
 
   @Post(':id/reject')
   @UseGuards(RolesGuard)
-  @Roles('SUPER_ADMIN', 'OPERATOR_ADMIN')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'OPERATOR_ADMIN')
   async reject(@CurrentUser() user: { id: string }, @Param('id') id: string, @Body() body: { operatorId: string }) {
     const operatorId = body.operatorId ?? user.id;
     return this.resaleService.rejectResale(operatorId, id);

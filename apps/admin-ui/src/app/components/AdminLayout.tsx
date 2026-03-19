@@ -14,6 +14,10 @@ export default function AdminLayout() {
       navigate('/admin/login');
       return;
     }
+    if (user?.mustChangePassword === true) {
+      navigate('/admin/change-password', { replace: true });
+      return;
+    }
     if (user?.role !== 'ADMIN') {
       clearAuthStorage();
       localStorage.removeItem('admin_token');

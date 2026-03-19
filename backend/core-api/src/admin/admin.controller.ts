@@ -4,10 +4,11 @@ import { AuditLogService } from '../audit/audit-log.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { AdminResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('SUPER_ADMIN')
+@Roles('SUPER_ADMIN', 'ADMIN')
 export class AdminController {
   constructor(
     private readonly adminService: AdminService,
@@ -29,6 +30,14 @@ export class AdminController {
   async getUsers() {
     const list = await this.adminService.getUsers();
     return list;
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() body: AdminResetPasswordDto) {
+    return this.adminService.resetUserPassword({
+      userId: body.userId,
+      newPassword: body.newPassword,
+    });
   }
 
   @Get('audit-logs')
@@ -101,5 +110,58 @@ export class AdminController {
   @Post('policy')
   async createPolicy(@Body() body: { facilityId: number; maxWaiting?: number; maxYears?: number }) {
     return this.adminService.upsertPolicy(body);
+  }
+
+  @Post('agents')
+  async createAgent(
+    @Body()
+    body: {
+      userId: string;
+      companyId: string;
+      name: string;
+      commissionRate: number;
+      code?: string;
+    },
+  ) {
+    return this.adminService.createAgent(body);
+  }
+
+  @Get('agents')
+  async listAgents() {
+    return this.adminService.listAgents();
+  }
+
+  /** [1] 사업자(Company) + OPERATOR 계정 + companyId + 초기 비밀번호(선택) */
+  @Post('onboarding/company-with-operator')
+  async onboardingCompanyWithOperator(
+    @Body()
+    body: {
+      companyName: string;
+      operatorLoginId: string;
+      operatorPassword?: string;
+      operatorName: string;
+      operatorPhone: string;
+      operatorBirthDate?: string;
+    },
+  ) {
+    return this.adminService.createCompanyWithOperator(body);
+  }
+
+  /** [2] AGENT User + Agent 프로필 + code 자동 + commissionRate */
+  @Post('onboarding/agent-user')
+  async onboardingAgentUser(
+    @Body()
+    body: {
+      companyId: string;
+      loginId: string;
+      password?: string;
+      userName: string;
+      phone: string;
+      birthDate?: string;
+      agentDisplayName: string;
+      commissionRate: number;
+    },
+  ) {
+    return this.adminService.createAgentUserWithProfile(body);
   }
 }

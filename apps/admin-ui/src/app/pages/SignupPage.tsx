@@ -44,7 +44,9 @@ export default function SignupPage() {
         email: email.trim() || undefined,
         address: address.trim() || undefined,
       });
-      setAuthStorage(res.token, res.user);
+      const token = res.accessToken ?? res.token;
+      if (!token || !res.user) throw new Error('가입 응답이 올바르지 않습니다.');
+      setAuthStorage(token, res.user);
       navigate('/');
     } catch (e) {
       setError(e instanceof Error ? e.message : '오류가 발생했습니다.');

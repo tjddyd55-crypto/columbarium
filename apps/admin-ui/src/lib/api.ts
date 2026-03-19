@@ -26,7 +26,18 @@ export function clearAuthStorage(): void {
   localStorage.removeItem(USER_KEY);
 }
 
-export type AuthUser = { id: string; login_id?: string; name?: string; email?: string; role: string };
+export type AuthUser = {
+  id: string;
+  login_id?: string;
+  name?: string;
+  email?: string;
+  role: string;
+  roles?: string[];
+  companyId?: string;
+  operatorId?: string;
+  /** true면 비밀번호 변경 전까지 일반 API 사용 불가 */
+  mustChangePassword?: boolean;
+};
 export type AuthResponse = { accessToken?: string; token?: string; user: AuthUser };
 type ApiEnvelope<T> =
   | { success: true; data: T; error?: null; message?: string }
@@ -87,6 +98,15 @@ export const api = {
     }) => request<AuthResponse>('/api/auth/signup', { method: 'POST', body: JSON.stringify(body) }),
     login: (body: { login_id: string; password: string }) =>
       request<AuthResponse>('/api/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+    changePassword: (body: { current_password: string; new_password: string }) =>
+      request<AuthResponse>('/api/auth/change-password', { method: 'POST', body: JSON.stringify(body) }),
+  },
+  adminAuth: {
+    resetPassword: (body: { userId: string; newPassword: string }) =>
+      request<{ ok: boolean; userId: string }>('/admin/reset-password', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      }),
   },
   waitlist: {
     create: (body: { seat_id: string; user_name?: string; user_phone?: string }) =>
@@ -135,6 +155,61 @@ export const api = {
     upsertPolicy: (body: { facilityId: number; maxWaiting?: number; maxYears?: number }) =>
       request<PolicyRow>('/admin/policy', { method: 'POST', body: JSON.stringify(body) }),
   },
+  dashboard: {
+    summary: () => request<DashboardSummary>('/dashboard/summary'),
+  },
+  agents: {
+    list: () => request<AgentRow[]>('/admin/agents'),
+    create: (body: { userId: string; companyId: string; name: string; commissionRate: number; code?: string }) =>
+      request<AgentRow>('/admin/agents', { method: 'POST', body: JSON.stringify(body) }),
+  },
+  operatorScope: {
+    myFacilities: () => request<SiteFacilityRow[]>('/admin/me/facilities'),
+    createFacility: (body: { name: string; address: string }) =>
+      request<SiteFacilityRow>('/admin/me/facility', { method: 'POST', body: JSON.stringify(body) }),
+    getSections: (facilityId: string) => request<SectionRow[]>(`/admin/me/facilities/${facilityId}/sections`),
+    getSeats: (sectionId: string) => request<AdminSeatRow[]>(`/admin/me/sections/${sectionId}/seats`),
+    getPolicy: (facilityId: string) => request<PolicyRow | null>(`/admin/me/facilities/${facilityId}/policy`),
+    createSection: (body: { facilityId: number; name: string; rows: number; cols: number }) =>
+      request<SectionCreatedRow>('/admin/me/section', { method: 'POST', body: JSON.stringify(body) }),
+    updateSeatPrice: (seatId: string, price: number) =>
+      request<{ id: string; price: number }>(`/admin/me/seat/${seatId}`, { method: 'PATCH', body: JSON.stringify({ price }) }),
+    blockSeat: (seatId: string, isBlocked: boolean) =>
+      request<{ id: string; isBlocked: boolean }>(`/admin/me/seat/${seatId}/block`, {
+        method: 'PATCH',
+        body: JSON.stringify({ isBlocked }),
+      }),
+    upsertPolicy: (body: { facilityId: number; maxWaiting?: number; maxYears?: number }) =>
+      request<PolicyRow>('/admin/me/policy', { method: 'POST', body: JSON.stringify(body) }),
+  },
+  onboarding: {
+    companyWithOperator: (body: {
+      companyName: string;
+      operatorLoginId: string;
+      operatorPassword?: string;
+      operatorName: string;
+      operatorPhone: string;
+      operatorBirthDate?: string;
+    }) =>
+      request<CompanyOperatorOnboarded>('/admin/onboarding/company-with-operator', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      }),
+    agentUser: (body: {
+      companyId: string;
+      loginId: string;
+      password?: string;
+      userName: string;
+      phone: string;
+      birthDate?: string;
+      agentDisplayName: string;
+      commissionRate: number;
+    }) =>
+      request<AgentUserOnboarded>('/admin/onboarding/agent-user', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      }),
+  },
 };
 
 export type CompanyRow = { id: string; name: string; createdAt: string };
@@ -143,6 +218,70 @@ export type SectionRow = { id: string; facilityId: string; name: string; rows: n
 export type SectionCreatedRow = SectionRow & { seatCount: number };
 export type AdminSeatRow = { id: string; sectionId: string; row: number; col: number; price: number; isBlocked: boolean };
 export type PolicyRow = { id: string; facilityId: string; maxWaiting: number | null; maxYears: number | null };
+
+export type CompanyOperatorOnboarded = {
+  company: { id: string; name: string; createdAt: string };
+  operatorAccount: { userId: string; loginId: string; initialPassword: string };
+};
+
+export type AgentUserOnboarded = {
+  agent: { id: string; code: string; name: string; commissionRate: number; companyId: string };
+  agentAccount: { userId: string; loginId: string; initialPassword: string };
+};
+
+export type DashboardSummary =
+  | {
+      view: 'ADMIN';
+      companyCount: number;
+      siteCount: number;
+      confirmedReservationCount: number;
+      pendingCommissionCount: number;
+    }
+  | {
+      view: 'OPERATOR';
+      companyId: string;
+      sites: { id: string; name: string; address: string }[];
+      confirmedReservationCount: number;
+      revenueTotal: number;
+    }
+  | {
+      view: 'AGENT';
+      agent: {
+        id: string;
+        code: string;
+        name: string;
+        commissionRate: number;
+        companyId: string;
+        companyName: string;
+      };
+      /** CONFIRMED 예약만 실적 (docs/RBAC-OPERATIONS.md) */
+      confirmedSalesLinkedCount: number;
+      commissionPendingTotal: number;
+      commissionPendingCount: number;
+      commissionPaidTotal: number;
+      commissionPaidCount: number;
+      recentCommissions: {
+        id: string;
+        reservationId: string;
+        amount: number;
+        status: string;
+        createdAt: string;
+        reservationPrice: number;
+        reservationStatus: string;
+      }[];
+    };
+
+export type AgentRow = {
+  id: string;
+  userId: string;
+  loginId?: string;
+  companyId: string;
+  companyName?: string;
+  code: string;
+  name: string;
+  commissionRate: number;
+  createdAt: string;
+};
 
 export type FacilityRow = {
   id: string;

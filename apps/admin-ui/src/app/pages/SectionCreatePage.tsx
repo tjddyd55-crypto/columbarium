@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
-import { api, type SiteFacilityRow, type SectionRow } from '../../lib/api';
+import { type SiteFacilityRow, type SectionRow } from '../../lib/api';
+import { facilityAdminApi } from '../../lib/facilityAdminApi';
+import { isCompanyScopedOperator } from '../../lib/operatorScope';
 
 export default function SectionCreatePage() {
+  const scoped = isCompanyScopedOperator();
   const [facilities, setFacilities] = useState<SiteFacilityRow[]>([]);
   const [facilityId, setFacilityId] = useState('');
   const [name, setName] = useState('');
@@ -12,8 +15,8 @@ export default function SectionCreatePage() {
   const [lastCreated, setLastCreated] = useState<{ name: string; seatCount: number } | null>(null);
 
   useEffect(() => {
-    api.adminSite.getFacilities().then(setFacilities).catch(() => setFacilities([]));
-  }, []);
+    facilityAdminApi.getFacilities(scoped).then(setFacilities).catch(() => setFacilities([]));
+  }, [scoped]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +32,7 @@ export default function SectionCreatePage() {
     setMessage(null);
     setLastCreated(null);
     try {
-      const res = await api.adminSite.createSection({
+      const res = await facilityAdminApi.createSection(scoped, {
         facilityId: Number(facilityId),
         name: name.trim(),
         rows,

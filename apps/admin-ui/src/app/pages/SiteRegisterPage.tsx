@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { api, type CompanyRow, type SiteFacilityRow } from '../../lib/api';
+import { facilityAdminApi } from '../../lib/facilityAdminApi';
+import { isCompanyScopedOperator } from '../../lib/operatorScope';
 
 export default function SiteRegisterPage() {
+  const scoped = isCompanyScopedOperator();
   const [companies, setCompanies] = useState<CompanyRow[]>([]);
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
@@ -10,22 +13,27 @@ export default function SiteRegisterPage() {
   const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
   useEffect(() => {
+    if (scoped) return;
     api.adminSite.getCompanies().then(setCompanies).catch(() => setCompanies([]));
-  }, []);
+  }, [scoped]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !address.trim() || !companyId) {
-      setMessage({ type: 'err', text: '시설명, 주소, 사업자를 입력/선택하세요.' });
+    if (!name.trim() || !address.trim()) {
+      setMessage({ type: 'err', text: '시설명과 주소를 입력하세요.' });
+      return;
+    }
+    if (!scoped && !companyId) {
+      setMessage({ type: 'err', text: '사업자를 선택하세요.' });
       return;
     }
     setLoading(true);
     setMessage(null);
     try {
-      const res = await api.adminSite.createFacility({
+      const res = await facilityAdminApi.createFacility(scoped, {
         name: name.trim(),
         address: address.trim(),
-        companyId: Number(companyId),
+        companyId: scoped ? undefined : Number(companyId),
       });
       setMessage({ type: 'ok', text: `등록되었습니다. (ID: ${res.id})` });
       setName('');
@@ -41,22 +49,26 @@ export default function SiteRegisterPage() {
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold text-[#1E293B]">시설 등록</h3>
-        <p className="text-sm text-gray-600">시설명, 주소, 사업자를 입력하여 등록합니다.</p>
+        <p className="text-sm text-gray-600">
+          {scoped ? '소속 사업자 범위에 시설을 등록합니다.' : '시설명, 주소, 사업자를 입력하여 등록합니다.'}
+        </p>
       </div>
       <form onSubmit={handleSubmit} className="bg-white rounded-lg p-6 border border-[#E5E7EB] max-w-md space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">사업자</label>
-          <select
-            value={companyId}
-            onChange={(e) => setCompanyId(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#3B82F6]"
-          >
-            <option value="">선택</option>
-            {companies.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-        </div>
+        {!scoped && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">사업자</label>
+            <select
+              value={companyId}
+              onChange={(e) => setCompanyId(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#3B82F6]"
+            >
+              <option value="">선택</option>
+              {companies.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">시설명</label>
           <input

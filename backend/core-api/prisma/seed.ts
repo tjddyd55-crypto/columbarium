@@ -16,11 +16,16 @@ async function main() {
   await prisma.role.upsert({ where: { code: 'USER' }, create: { code: 'USER', name: '일반 사용자' }, update: {} });
   await prisma.role.upsert({ where: { code: 'SALES_MANAGER' }, create: { code: 'SALES_MANAGER', name: '영업관리자' }, update: {} });
   await prisma.role.upsert({ where: { code: 'OPERATOR_ADMIN' }, create: { code: 'OPERATOR_ADMIN', name: '업체관리자' }, update: {} });
+  await prisma.role.upsert({ where: { code: 'ADMIN' }, create: { code: 'ADMIN', name: '관리자' }, update: {} });
+  await prisma.role.upsert({ where: { code: 'OPERATOR' }, create: { code: 'OPERATOR', name: '사업자 운영자' }, update: {} });
+  await prisma.role.upsert({ where: { code: 'AGENT' }, create: { code: 'AGENT', name: '중간판매자' }, update: {} });
   const superAdminRole = await prisma.role.upsert({
     where: { code: 'SUPER_ADMIN' },
     create: { code: 'SUPER_ADMIN', name: '슈퍼관리자' },
     update: {},
   });
+  const operatorRole = await prisma.role.findUniqueOrThrow({ where: { code: 'OPERATOR' } });
+  const agentRole = await prisma.role.findUniqueOrThrow({ where: { code: 'AGENT' } });
 
   const passwordHash = await bcrypt.hash(SUPER_ADMIN_SEED.password, 10);
   const superAdminUser = await prisma.user.upsert({
@@ -32,9 +37,10 @@ async function main() {
       birthDate: SUPER_ADMIN_SEED.birthDate,
       phone: SUPER_ADMIN_SEED.phone,
       status: 'ACTIVE',
+      mustChangePassword: false,
       roles: { create: { roleId: superAdminRole.id } },
     },
-    update: { passwordHash },
+    update: { passwordHash, mustChangePassword: false },
     include: { roles: true },
   });
 
@@ -74,17 +80,72 @@ async function main() {
     for (let r = 1; r <= 3; r++) for (let c = 1; c <= 5; c++) seatsB.push({ sectionId: sectionB.id, row: r, col: c, price: 25000000 });
     await prisma.seat.createMany({ data: seatsB });
   }
-  const sections = [sectionA, sectionB];
   const policy = await prisma.seatPolicy.findUnique({ where: { facilityId: site.id } });
   if (!policy) {
     await prisma.seatPolicy.create({ data: { facilityId: site.id, maxWaiting: 3, maxYears: 30 } });
   }
+
+  const demoAgentCode = 'DEMOAGNT';
+  const opHash = await bcrypt.hash('Operator1!', 10);
+  const sampleOperator = await prisma.user.upsert({
+    where: { loginId: 'sampleoperator' },
+    create: {
+      loginId: 'sampleoperator',
+      passwordHash: opHash,
+      name: '샘플 운영자',
+      birthDate: new Date('1990-01-01'),
+      phone: '010-2000-0000',
+      status: 'ACTIVE',
+      companyId: company.id,
+      mustChangePassword: false,
+      roles: { create: { roleId: operatorRole.id } },
+    },
+    update: { passwordHash: opHash, companyId: company.id, mustChangePassword: false },
+    include: { roles: true },
+  });
+  if (!sampleOperator.roles.some((r) => r.roleId === operatorRole.id)) {
+    await prisma.userRole.create({ data: { userId: sampleOperator.id, roleId: operatorRole.id } });
+  }
+
+  const agHash = await bcrypt.hash('Agent1!', 10);
+  const sampleAgentUser = await prisma.user.upsert({
+    where: { loginId: 'sampleagent' },
+    create: {
+      loginId: 'sampleagent',
+      passwordHash: agHash,
+      name: '샘플 에이전트',
+      birthDate: new Date('1990-01-01'),
+      phone: '010-3000-0000',
+      status: 'ACTIVE',
+      mustChangePassword: false,
+      roles: { create: { roleId: agentRole.id } },
+    },
+    update: { passwordHash: agHash, mustChangePassword: false },
+    include: { roles: true },
+  });
+  if (!sampleAgentUser.roles.some((r) => r.roleId === agentRole.id)) {
+    await prisma.userRole.create({ data: { userId: sampleAgentUser.id, roleId: agentRole.id } });
+  }
+
+  await prisma.agent.upsert({
+    where: { userId: sampleAgentUser.id },
+    create: {
+      userId: sampleAgentUser.id,
+      companyId: company.id,
+      code: demoAgentCode,
+      name: '데모 에이전트',
+      commissionRate: 5,
+    },
+    update: { companyId: company.id, commissionRate: 5, name: '데모 에이전트' },
+  });
 
   const companyCount = await prisma.company.count();
   const facilityCount = await prisma.site.count();
   const sectionCount = await prisma.section.count();
   const seatCount = await prisma.seat.count();
   console.log('Seed 완료. 수퍼관리자 계정:', SUPER_ADMIN_SEED.loginId);
+  console.log('샘플 운영자: sampleoperator / Operator1! (company 연결)');
+  console.log('샘플 에이전트: sampleagent / Agent1! (코드:', demoAgentCode, ')');
   console.log('샘플 시설/좌석:', { companyCount, facilityCount, sectionCount, seatCount });
 }
 

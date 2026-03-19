@@ -4,6 +4,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserStatus } from '@prisma/client';
+import { primaryRoleCode } from '../../common/utils/role-priority.util';
 
 export interface JwtPayload {
   sub: string;
@@ -29,12 +30,15 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       include: { roles: { include: { role: true } } },
     });
     if (!user) throw new UnauthorizedException();
-    const roleCode = user.roles[0]?.role?.code ?? 'USER';
+    const roleCodes = user.roles.map((ur) => String(ur.role.code));
     return {
       id: String(user.id),
       loginId: user.loginId,
       email: user.email ?? user.loginId,
-      role: roleCode,
+      role: primaryRoleCode(roleCodes),
+      roles: roleCodes,
+      mustChangePassword: user.mustChangePassword,
+      ...(user.companyId != null && { companyId: String(user.companyId) }),
     };
   }
 }

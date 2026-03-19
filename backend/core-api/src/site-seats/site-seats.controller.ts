@@ -33,8 +33,12 @@ export class SeatsReserveController {
   constructor(private readonly siteSeatsService: SiteSeatsService) {}
 
   @Post(':id/reserve')
-  async reserve(@Param('id') id: string, @CurrentUser() user: { id: string }) {
-    return this.siteSeatsService.reserveSeat(BigInt(id), user.id);
+  async reserve(
+    @Param('id') id: string,
+    @CurrentUser() user: { id: string },
+    @Body() body: { agentCode?: string },
+  ) {
+    return this.siteSeatsService.reserveSeat(BigInt(id), user.id, { agentCode: body?.agentCode });
   }
 
   @Post(':id/wait')

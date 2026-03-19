@@ -19,12 +19,15 @@ import { AdminModule } from './admin/admin.module';
 import { DevicesModule } from './devices/devices.module';
 import { AuditModule } from './audit/audit.module';
 import { SiteSeatsModule } from './site-seats/site-seats.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { MustChangePasswordGuard } from './common/guards/must-change-password.guard';
 import { LegacyApiModule } from './legacy-api/legacy-api.module';
 
 @Module({
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: MustChangePasswordGuard },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
   imports: [
@@ -47,6 +50,7 @@ import { LegacyApiModule } from './legacy-api/legacy-api.module';
     DevicesModule,
     AuditModule,
     SiteSeatsModule,
+    DashboardModule,
     LegacyApiModule,
   ],
 })

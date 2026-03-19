@@ -21,13 +21,25 @@ export default function Login() {
       const token = res.accessToken ?? res.token;
       const user = res.user;
       if (!token || !user) throw new Error('Invalid login response');
-      if (user.role !== 'SUPER_ADMIN' && user.role !== 'OPERATOR_ADMIN') {
-        setError('관리자만 접근할 수 있습니다.');
+      const allowed = new Set([
+        'SUPER_ADMIN',
+        'ADMIN',
+        'OPERATOR_ADMIN',
+        'OPERATOR',
+        'AGENT',
+        'SALES_MANAGER',
+      ]);
+      if (!allowed.has(user.role)) {
+        setError('관리자·운영자·에이전트 계정만 접근할 수 있습니다.');
         return;
       }
       setAuthStorage(token, user);
       localStorage.setItem(ADMIN_TOKEN_KEY, token);
-      navigate('/admin');
+      if (user.mustChangePassword === true) {
+        navigate('/admin/change-password', { replace: true });
+      } else {
+        navigate('/admin');
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : typeof err === 'string' ? err : '로그인에 실패했습니다.';
       setError(msg);

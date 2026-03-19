@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { BusinessError, ErrorCode } from '../common/errors/business.error';
 import { getSeatState, type SeatStatus } from '../common/utils/seat-state.util';
-import { ReservationStatus } from '@prisma/client';
+import { CommissionStatus, ReservationStatus } from '@prisma/client';
 
 /** RESERVED 타임아웃(분). 만료 시 자동 CANCELLED 처리 */
 const RESERVED_EXPIRE_MINUTES = 10;
@@ -117,15 +117,16 @@ export class SiteSeatsService {
     await tx.$executeRaw(Prisma.sql`SELECT 1 FROM "Seat" WHERE id = ${seatId} FOR UPDATE`);
   }
 
-  /** 즉시 예약: GREEN → RESERVED 생성, price·expiresAt 저장. 트랜잭션 + seat lock */
-  async reserveSeat(seatId: bigint, userId: string) {
+  /** 즉시 예약: GREEN → RESERVED 생성, price·expiresAt 저장. agentCode 시 Agent·Commission 연결. */
+  async reserveSeat(seatId: bigint, userId: string, opts?: { agentCode?: string }) {
     const userIdBig = BigInt(userId);
+    const agentCodeTrimmed = opts?.agentCode?.trim() || undefined;
     return this.prisma.$transaction(async (tx) => {
       await this.cancelExpiredReserved(tx);
       await this.lockSeat(tx, seatId);
       const seat = await tx.seat.findUnique({
         where: { id: seatId },
-        include: { section: true, reservations: true },
+        include: { section: { include: { site: true } }, reservations: true },
       });
       if (!seat) throw new BusinessError(ErrorCode.NOT_FOUND, '좌석을 찾을 수 없습니다.', 404);
       if (seat.isBlocked) throw new BusinessError(ErrorCode.SEAT_BLOCKED, '차단된 좌석입니다.', 400);
@@ -151,6 +152,23 @@ export class SiteSeatsService {
 
       const lockedPrice = seat.price;
       const expiresAt = new Date(Date.now() + RESERVED_EXPIRE_MINUTES * 60 * 1000);
+
+      let agentId: bigint | undefined;
+      if (agentCodeTrimmed) {
+        const agent = await tx.agent.findUnique({ where: { code: agentCodeTrimmed } });
+        if (!agent) {
+          throw new BusinessError(ErrorCode.AGENT_CODE_INVALID, '유효하지 않은 에이전트 코드입니다.', 400);
+        }
+        if (agent.companyId !== seat.section.site.companyId) {
+          throw new BusinessError(
+            ErrorCode.AGENT_COMPANY_MISMATCH,
+            '해당 시설과 연결되지 않은 에이전트 코드입니다.',
+            400,
+          );
+        }
+        agentId = agent.id;
+      }
+
       const reservation = await tx.reservation.create({
         data: {
           seatId,
@@ -158,13 +176,40 @@ export class SiteSeatsService {
           status: ReservationStatus.RESERVED,
           price: lockedPrice,
           expiresAt,
+          ...(agentId != null && { agentId }),
         },
       });
+
+      if (agentId != null) {
+        const agentRow = await tx.agent.findUniqueOrThrow({ where: { id: agentId } });
+        const amount = Math.round((lockedPrice * agentRow.commissionRate) / 100);
+        const commission = await tx.commission.create({
+          data: {
+            reservationId: reservation.id,
+            agentId,
+            amount,
+            status: CommissionStatus.PENDING,
+          },
+        });
+        console.log('[RESERVE_AGENT_LINK]', {
+          reservationId: String(reservation.id),
+          agentId: String(agentId),
+          agentCode: agentCodeTrimmed,
+        });
+        console.log('[COMMISSION_CREATED]', {
+          commissionId: String(commission.id),
+          reservationId: String(reservation.id),
+          agentId: String(agentId),
+          amount,
+        });
+      }
+
       console.log('[RESERVE_PRICE_LOCK]', {
         reservationId: String(reservation.id),
         seatId: String(seatId),
         price: reservation.price,
         expiresAt: expiresAt.toISOString(),
+        agentId: agentId != null ? String(agentId) : null,
       });
       return {
         id: String(reservation.id),
@@ -172,6 +217,7 @@ export class SiteSeatsService {
         status: reservation.status,
         price: reservation.price,
         expiresAt: reservation.expiresAt?.toISOString() ?? null,
+        agentId: agentId != null ? String(agentId) : null,
         createdAt: reservation.createdAt.toISOString(),
       };
     });
@@ -247,9 +293,15 @@ export class SiteSeatsService {
     if (r.status !== ReservationStatus.RESERVED) {
       throw new BusinessError(ErrorCode.SEAT_NOT_AVAILABLE, '결제 대기 상태(RESERVED)만 실패 처리할 수 있습니다.', 400);
     }
-    await this.prisma.reservation.update({
-      where: { id: reservationId },
-      data: { status: ReservationStatus.CANCELLED },
+    await this.prisma.$transaction(async (tx) => {
+      await tx.reservation.update({
+        where: { id: reservationId },
+        data: { status: ReservationStatus.CANCELLED },
+      });
+      await tx.commission.updateMany({
+        where: { reservationId, status: CommissionStatus.PENDING },
+        data: { status: CommissionStatus.CANCELLED },
+      });
     });
     console.log('[PAYMENT_FAIL]', { reservationId: String(reservationId), previousStatus: r.status });
     return { reservationId: String(reservationId), status: 'CANCELLED' };
@@ -299,6 +351,10 @@ export class SiteSeatsService {
       await tx.reservation.update({
         where: { id: reservationId },
         data: { status: ReservationStatus.CANCELLED },
+      });
+      await tx.commission.updateMany({
+        where: { reservationId, status: CommissionStatus.PENDING },
+        data: { status: CommissionStatus.CANCELLED },
       });
 
       const promoted: { id: string; queueOrder: number } | null = null;

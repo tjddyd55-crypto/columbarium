@@ -1,9 +1,18 @@
-import { Outlet, Link, useNavigate } from 'react-router';
-import { getStoredUser, clearAuthStorage } from '../../lib/api';
+import { useEffect } from 'react';
+import { Outlet, Link, useNavigate, useLocation } from 'react-router';
+import { getStoredUser, clearAuthStorage, getStoredToken } from '../../lib/api';
 
 export default function UserLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const user = getStoredUser();
+
+  useEffect(() => {
+    const token = getStoredToken();
+    if (!token || !user?.mustChangePassword) return;
+    if (location.pathname === '/change-password') return;
+    navigate('/change-password', { replace: true });
+  }, [location.pathname, navigate, user?.mustChangePassword]);
 
   const handleLogout = () => {
     clearAuthStorage();

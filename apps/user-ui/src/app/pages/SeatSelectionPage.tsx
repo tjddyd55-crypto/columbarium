@@ -25,6 +25,7 @@ export function SeatSelectionPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [agentCode, setAgentCode] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -77,7 +78,7 @@ export function SeatSelectionPage() {
     if (!selectedSeat || selectedSeat.status !== "GREEN") return;
     setActionLoading(true);
     try {
-      await api.reserveSeat(String(selectedSeat.id));
+      await api.reserveSeat(String(selectedSeat.id), agentCode || undefined);
       alert("즉시 구매가 완료되었습니다.");
       setSelectedSeat(null);
       if (facilityId) {
@@ -204,13 +205,29 @@ export function SeatSelectionPage() {
               )}
             </div>
             {selectedSeat.status === "GREEN" && (
-              <Button
-                onClick={handleReserve}
-                disabled={actionLoading}
-                className="w-full h-14 bg-green-600 hover:bg-green-700 text-white rounded-xl text-lg font-semibold"
-              >
-                {actionLoading ? "처리 중..." : "즉시 구매"}
-              </Button>
+              <div className="space-y-3">
+                <div>
+                  <label htmlFor="agent-code" className="block text-sm text-gray-600 mb-1">
+                    에이전트 코드 (선택)
+                  </label>
+                  <input
+                    id="agent-code"
+                    type="text"
+                    value={agentCode}
+                    onChange={(e) => setAgentCode(e.target.value)}
+                    placeholder="중간판매자 코드가 있으면 입력"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                    autoComplete="off"
+                  />
+                </div>
+                <Button
+                  onClick={handleReserve}
+                  disabled={actionLoading}
+                  className="w-full h-14 bg-green-600 hover:bg-green-700 text-white rounded-xl text-lg font-semibold"
+                >
+                  {actionLoading ? "처리 중..." : "즉시 구매"}
+                </Button>
+              </div>
             )}
             {selectedSeat.status === "YELLOW" && (
               <Button
