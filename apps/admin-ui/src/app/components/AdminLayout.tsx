@@ -6,7 +6,7 @@ import { getStoredUser, clearAuthStorage } from '../../lib/api';
 import { canAccessAdminPortal } from '../../lib/adminPortalAccess';
 
 /**
- * 관리자 콘솔 레이아웃 + RoleGuard: ADMIN/SUPER_ADMIN 만 /admin/* 하위 라우트 접근.
+ * 관리자 콘솔 레이아웃 + 접근 제어: 플랫폼 관리자 또는 소속 companyId 가 있는 운영자만.
  * (토큰 없음·역할 불일치 시 /admin/login 으로 replace)
  */
 export default function AdminLayout() {

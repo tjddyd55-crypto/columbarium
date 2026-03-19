@@ -17,12 +17,14 @@ export class CompanyPortalController {
 
   @Get(':companyId')
   async detail(@Param('companyId') companyId: string, @CurrentUser() user: CompanyPortalUser) {
-    return this.adminService.getCompanyPortalDetail(BigInt(companyId), user);
+    const id = this.adminService.parseCompanyPathId(companyId);
+    return this.adminService.getCompanyPortalDetail(id, user);
   }
 
   @Get(':companyId/facilities')
   async facilities(@Param('companyId') companyId: string, @CurrentUser() user: CompanyPortalUser) {
-    return this.adminService.getCompanyPortalFacilities(BigInt(companyId), user);
+    const id = this.adminService.parseCompanyPathId(companyId);
+    return this.adminService.getCompanyPortalFacilities(id, user);
   }
 
   @Post(':companyId/facilities')
@@ -31,7 +33,8 @@ export class CompanyPortalController {
     @Body() body: CompanyPortalCreateFacilityDto,
     @CurrentUser() user: CompanyPortalUser,
   ) {
-    return this.adminService.createCompanyPortalFacility(BigInt(companyId), user, body);
+    const id = this.adminService.parseCompanyPathId(companyId);
+    return this.adminService.createCompanyPortalFacility(id, user, body);
   }
 
   @Get(':companyId/reservations')
@@ -40,16 +43,19 @@ export class CompanyPortalController {
     @Query('status') status: string | undefined,
     @CurrentUser() user: CompanyPortalUser,
   ) {
-    return this.adminService.listCompanyPortalReservations(BigInt(companyId), user, status);
+    const id = this.adminService.parseCompanyPathId(companyId);
+    return this.adminService.listCompanyPortalReservations(id, user, status);
   }
 
   @Get(':companyId/resales')
   async resales(@Param('companyId') companyId: string, @CurrentUser() user: CompanyPortalUser) {
-    return this.adminService.listCompanyPortalResales(BigInt(companyId), user);
+    const id = this.adminService.parseCompanyPathId(companyId);
+    return this.adminService.listCompanyPortalResales(id, user);
   }
 
   @Get(':companyId/agents')
   async agents(@Param('companyId') companyId: string, @CurrentUser() user: CompanyPortalUser) {
-    return this.adminService.listCompanyPortalAgents(BigInt(companyId), user);
+    const id = this.adminService.parseCompanyPathId(companyId);
+    return this.adminService.listCompanyPortalAgents(id, user);
   }
 }

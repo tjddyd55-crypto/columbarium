@@ -102,6 +102,18 @@ export class AdminService {
     }));
   }
 
+  /**
+   * URL 파라미터 `admin/companies/:companyId` — DB Company PK는 bigint, 숫자 문자열만 허용.
+   * 잘못된 값은 500(BigInt SyntaxError) 대신 400으로 반환.
+   */
+  parseCompanyPathId(companyId: string): bigint {
+    const t = companyId?.trim();
+    if (!t || !/^\d+$/.test(t)) {
+      throw new BadRequestException('유효하지 않은 사업자 ID입니다.');
+    }
+    return BigInt(t);
+  }
+
   assertPortalCompanyAccess(user: CompanyPortalUser, companyId: bigint): void {
     const roleList = user.roles?.length ? user.roles : user.role ? [user.role] : [];
     if (roleList.includes('SUPER_ADMIN') || roleList.includes('ADMIN')) {

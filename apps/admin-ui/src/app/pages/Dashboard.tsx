@@ -6,6 +6,7 @@ import DataTable from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import { Building2, ListOrdered, FileText, Wallet, Users, Store } from 'lucide-react';
 import { api, type CompanyRow, type DashboardSummary, getStoredUser } from '../../lib/api';
+import { isPlatformAdminRole } from '../../lib/adminPortalAccess';
 
 export default function Dashboard() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
@@ -18,8 +19,8 @@ export default function Dashboard() {
   const [companies, setCompanies] = useState<CompanyRow[]>([]);
 
   const user = getStoredUser();
-  const isLegacyAdmin =
-    user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
+  /** 플랫폼 관리자(ADMIN/SUPER_ADMIN): roles[]·대표 role 모두 반영. 레거시 KPI·사업자 목록 API */
+  const isLegacyAdmin = isPlatformAdminRole(user);
 
   useEffect(() => {
     let cancelled = false;
@@ -144,13 +145,15 @@ export default function Dashboard() {
               icon={Wallet}
             />
           </div>
-          {companies.length > 0 && (
-            <div className="bg-white rounded-lg border border-[#E5E7EB] p-4">
-              <h3 className="text-lg font-semibold text-[#1E293B] mb-1">사업자 목록</h3>
-              <p className="text-sm text-gray-600 mb-4">사업자명을 클릭하면 해당 사업자 상세 콘솔로 이동합니다.</p>
+          <div className="bg-white rounded-lg border border-[#E5E7EB] p-4">
+            <h3 className="text-lg font-semibold text-[#1E293B] mb-1">사업자 목록</h3>
+            <p className="text-sm text-gray-600 mb-4">사업자명을 클릭하면 해당 사업자 상세(`/admin/companies/:id`)로 이동합니다.</p>
+            {companies.length === 0 ? (
+              <p className="text-sm text-gray-500 py-2">등록된 사업자가 없습니다. 온보딩 또는 관리 메뉴에서 사업자를 먼저 등록하세요.</p>
+            ) : (
               <DataTable columns={companyListColumns} data={companies} />
-            </div>
-          )}
+            )}
+          </div>
         </>
       )}
 

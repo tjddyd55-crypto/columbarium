@@ -35,7 +35,7 @@ const menuItems: MenuItem[] = [
   { path: "/admin/section", label: "구역 생성", icon: Grid3x3, operatorWorkspace: true },
   { path: "/admin/seat-management", label: "좌석 관리", icon: Grid3x3, operatorWorkspace: true },
   { path: "/admin/policy", label: "정책 설정", icon: Settings, operatorWorkspace: true },
-  { path: "/admin/business", label: "사업자 관리(기존)", icon: Building2, adminOnly: true },
+  { path: "/admin/business", label: "사업자 관리", icon: Building2, adminOnly: true },
   { path: "/admin/facility", label: "시설 관리(기존)", icon: MapPin, adminOnly: true },
   { path: "/admin/seat", label: "봉안함(칸) 관리", icon: Grid3x3, adminOnly: true },
   { path: "/admin/waitlist", label: "대기열 관리", icon: ListOrdered, adminOnly: true },

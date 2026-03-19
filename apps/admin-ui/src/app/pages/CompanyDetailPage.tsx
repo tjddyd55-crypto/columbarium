@@ -502,38 +502,38 @@ export default function CompanyDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <Link to="/admin" className="text-sm text-gray-600 hover:text-gray-800 inline-block mb-1">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <Link to="/admin" className="text-sm text-gray-600 hover:text-gray-800 inline-block mb-2">
             ← 대시보드
           </Link>
-          <h3 className="text-lg font-semibold text-[#1E293B]">{detail.name}</h3>
-          <p className="text-sm text-gray-600">사업자 상세 · 시설 및 봉안함 관리</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-gray-500 mb-1">사업자 상세</p>
+          <h1 className="text-2xl font-bold text-[#1E293B] truncate" title={detail.name}>
+            {detail.name}
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">등록일 {detail.createdAt.slice(0, 10)}</p>
         </div>
         {showGlobalSeatLink && (
           <Link
             to={`/admin/seat-management?companyId=${encodeURIComponent(companyId)}`}
-            className="flex items-center gap-2 bg-[#3B82F6] text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+            className="flex items-center gap-2 shrink-0 bg-[#3B82F6] text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
           >
             봉안함 그리드 (이 사업자 고정)
           </Link>
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* 상단 요약: 사업자명(위 타이틀) · 상태 · 사업자번호 — GET /admin/companies/:id 와 동일 필드 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="bg-white rounded-lg border border-[#E5E7EB] p-4">
-          <p className="text-sm text-gray-600">사업자번호</p>
-          <p className="text-lg font-bold text-[#1E293B] mt-1">{detail.businessNo ?? '—'}</p>
+          <p className="text-sm text-gray-600 mb-2">상태</p>
+          <StatusBadge status={detail.status} />
         </div>
         <div className="bg-white rounded-lg border border-[#E5E7EB] p-4">
-          <p className="text-sm text-gray-600">상태</p>
-          <p className="mt-2">
-            <StatusBadge status={detail.status} />
+          <p className="text-sm text-gray-600 mb-2">사업자번호</p>
+          <p className="text-lg font-semibold text-[#1E293B] font-mono tracking-tight">
+            {detail.businessNo?.trim() ? detail.businessNo : '—'}
           </p>
-        </div>
-        <div className="bg-white rounded-lg border border-[#E5E7EB] p-4">
-          <p className="text-sm text-gray-600">생성일</p>
-          <p className="text-lg font-bold text-[#1E293B] mt-1">{detail.createdAt.slice(0, 10)}</p>
         </div>
       </div>
 

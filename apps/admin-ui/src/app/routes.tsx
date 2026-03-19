@@ -12,7 +12,7 @@ import WaitlistPage from "./pages/WaitlistPage";
 import ContractPage from "./pages/ContractPage";
 import MyPage from "./pages/MyPage";
 import Dashboard from "./pages/Dashboard";
-import OperatorManagement from "./pages/OperatorManagement";
+import CompanyListPage from "./pages/CompanyListPage";
 import FacilityManagement from "./pages/FacilityManagement";
 import UnitManagement from "./pages/UnitManagement";
 import QueueManagement from "./pages/QueueManagement";
@@ -59,7 +59,7 @@ export const router = createBrowserRouter([
       { path: "section", Component: SectionCreatePage },
       { path: "seat-management", Component: SeatManagementPage },
       { path: "policy", Component: PolicySettingPage },
-      { path: "business", Component: OperatorManagement },
+      { path: "business", Component: CompanyListPage },
       { path: "facility", Component: FacilityManagement },
       { path: "seat", Component: UnitManagement },
       { path: "waitlist", Component: QueueManagement },
